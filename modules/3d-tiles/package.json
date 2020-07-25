@@ -1,10 +1,11 @@
 {
-  "name": "@loaders.gl/3d-tiles",
+  "name": "@avnerus/loaders.gl-3d-tiles",
   "version": "2.3.0-alpha.6",
   "description": "3D Tiles, an open standard for streaming massive heterogeneous 3D geospatial datasets.",
   "license": "MIT",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://npm.pkg.github.com/"
   },
   "repository": {
     "type": "git",
@@ -35,7 +36,7 @@
   },
   "dependencies": {
     "@loaders.gl/core": "2.3.0-alpha.6",
-    "@loaders.gl/draco": "2.3.0-alpha.6",
+    "@avnerus/loaders.gl-draco": "2.3.0-alpha.6",
     "@loaders.gl/gltf": "2.3.0-alpha.6",
     "@loaders.gl/loader-utils": "2.3.0-alpha.6",
     "@loaders.gl/math": "2.3.0-alpha.6",

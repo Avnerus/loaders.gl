@@ -1,7 +1,7 @@
 // This file is derived from the Cesium code base under Apache 2 license
 // See LICENSE.md and https://github.com/AnalyticalGraphicsInc/cesium/blob/master/LICENSE.md
 
-import {DracoLoader} from '@loaders.gl/draco';
+import {DracoLoader} from '@avnerus/loaders.gl-draco';
 import {GL} from '@loaders.gl/math';
 import {Vector3} from '@math.gl/core';
 
@@ -36,7 +36,9 @@ function initializeTile(tile) {
     positions: null,
     colors: null,
     normals: null,
-    batchIds: null
+    batchIds: null,
+    intensities: null,
+    classifications: null
   };
   tile.isQuantized = false;
   tile.isTranslucent = false;
@@ -207,6 +209,9 @@ export async function loadDraco(tile, dracoData, options, context) {
   const decodedColors = data.attributes.COLOR_0 && data.attributes.COLOR_0.value;
   const decodedNormals = data.attributes.NORMAL && data.attributes.NORMAL.value;
   const decodedBatchIds = data.attributes.BATCH_ID && data.attributes.BATCH_ID.value;
+  const decodedIntensities = data.attributes.INTENSITY && data.attributes.INTENSITY.value;
+  const decodedClassifications =
+    data.attributes.CLASSIFICATION && data.attributes.CLASSIFICATION.value;
   const isQuantizedDraco = decodedPositions && data.attributes.POSITION.value.quantization;
   const isOctEncodedDraco = decodedNormals && data.attributes.NORMAL.value.quantization;
   if (isQuantizedDraco) {
@@ -228,7 +233,9 @@ export async function loadDraco(tile, dracoData, options, context) {
     positions: decodedPositions,
     colors: normalize3DTileColorAttribute(tile, decodedColors),
     normals: decodedNormals,
-    batchIds: decodedBatchIds
+    batchIds: decodedBatchIds,
+    intensities: decodedIntensities,
+    classifications: decodedClassifications
   };
 }
 
