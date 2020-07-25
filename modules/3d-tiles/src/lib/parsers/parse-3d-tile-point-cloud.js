@@ -1,7 +1,7 @@
 // This file is derived from the Cesium code base under Apache 2 license
 // See LICENSE.md and https://github.com/AnalyticalGraphicsInc/cesium/blob/master/LICENSE.md
 
-import {DracoLoader} from '@avnerus/loaders.gl-draco';
+import {DracoLoader} from '@loaders.gl/draco';
 import {GL} from '@loaders.gl/math';
 import {Vector3} from '@math.gl/core';
 

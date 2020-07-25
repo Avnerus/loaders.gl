@@ -1,15 +1,14 @@
 {
-  "name": "@avnerus/loaders.gl-draco",
+  "name": "@loaders.gl/draco",
   "version": "2.3.0-alpha.6",
   "description": "Framework-independent loader and writer for Draco compressed meshes and point clouds",
   "license": "MIT",
   "publishConfig": {
-    "access": "public",
-    "registry":"https://npm.pkg.github.com/"
+    "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/avnerus/loaders.gl"
+    "url": "https://github.com/visgl/loaders.gl"
   },
   "keywords": [
     "webgl",
