@@ -1,18 +1,19 @@
-import parseSHP from './lib/parse-shp';
 /** @typedef {import('@loaders.gl/loader-utils').LoaderObject} LoaderObject */
+/** @typedef {import('@loaders.gl/loader-utils').WorkerLoaderObject} WorkerLoaderObject */
+import parseSHP from './lib/parse-shp';
 
 // __VERSION__ is injected by babel-plugin-version-inline
 // @ts-ignore TS2304: Cannot find name '__VERSION__'.
 const VERSION = typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'latest';
 
-/** @type {LoaderObject} */
+/** @type {WorkerLoaderObject} */
 export const SHPWorkerLoader = {
   id: 'shp',
   name: 'SHP',
   category: 'geometry',
   version: VERSION,
   extensions: ['shp'],
-  mimeTypes: [],
+  mimeTypes: ['application/octet-stream'],
   options: {
     shp: {
       // workerUrl: `https://unpkg.com/@loaders.gl/shapefile@${VERSION}/dist/shp-loader.worker.js`

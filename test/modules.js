@@ -58,10 +58,11 @@ if (TEST_TILES) {
 
 // Geospatial Formats
 if (TEST_GEOSPATIAL) {
+  require('@loaders.gl/gis/test')
+  require('@loaders.gl/flatgeobuf/test')
   require('@loaders.gl/kml/test');
   require('@loaders.gl/wkt/test');
   require('@loaders.gl/mvt/test');
-  require('@loaders.gl/gis/test')
   require('@loaders.gl/shapefile/test')
 }
 
@@ -75,5 +76,7 @@ if (TEST_TABLES) {
 
 // Archive Formats
 if (TEST_ARCHIVES) {
+  require('@loaders.gl/compression/test');
+  require('@loaders.gl/crypto/test');
   require('@loaders.gl/zip/test');
 }

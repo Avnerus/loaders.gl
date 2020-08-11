@@ -15,7 +15,7 @@ export const ShapefileLoader = {
   category: 'geometry',
   version: VERSION,
   extensions: ['shp'],
-  mimeTypes: [],
+  mimeTypes: ['application/octet-stream'],
   options: {
     shapefile: {}
   },
@@ -55,7 +55,7 @@ async function parseShapefile(arrayBuffer, options, context) {
   // Convert binary geometries to GeoJSON
   const geojsonGeometries = [];
   for (const geom of geometries) {
-    geojsonGeometries.push(binaryToGeoJson(geom));
+    geojsonGeometries.push(binaryToGeoJson(geom, geom.type, 'geometry'));
   }
 
   // parse properties

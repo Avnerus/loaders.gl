@@ -26,7 +26,7 @@
             {"entry": "docs/developer-guide/polyfills"},
             {"entry": "docs/developer-guide/dependencies"},
             {"entry": "docs/developer-guide/creating-loaders-and-writers"},
-            {"entry": "docs/contributing"}
+            {"entry": "docs/developer-guide/dev-env"}
           ]
         },
         {
@@ -134,6 +134,28 @@
           "title": "@loaders.gl/csv",
           "entries": [
             {"entry": "modules/csv/docs"}
+          ]
+        },
+        {
+          "title": "@loaders.gl/compression",
+          "entries": [
+            {"entry": "modules/compression/docs"},
+            {"entry": "modules/compression/docs/api-reference/zlib-deflate-transform"},
+            {"entry": "modules/compression/docs/api-reference/zlib-inflate-transform"},
+            {"entry": "modules/compression/docs/api-reference/lz4-deflate-transform"},
+            {"entry": "modules/compression/docs/api-reference/lz4-inflate-transform"},
+            {"entry": "modules/compression/docs/api-reference/zstd-deflate-transform"},
+            {"entry": "modules/compression/docs/api-reference/zstd-inflate-transform"}
+          ]
+        },
+        {
+          "title": "@loaders.gl/crypto",
+          "entries": [
+            {"entry": "modules/crypto/docs"},
+            {"entry": "modules/crypto/docs/api-reference/crc32-hash-transform"},
+            {"entry": "modules/crypto/docs/api-reference/crc32c-hash-transform"},
+            {"entry": "modules/crypto/docs/api-reference/crypto-hash-transform"},
+            {"entry": "modules/crypto/docs/api-reference/md5-hash-transform"}
           ]
         },
         {
