@@ -378,6 +378,8 @@ test('Tileset3D#handles failed tile processing', t => {
 
 test('Tileset3D#loads tiles in tileset', async t => {
   const tilesetJson = await load(TILESET_URL, Tiles3DLoader);
+  // TODO: when using worker this has to be set externally
+  tilesetJson.loader = Tiles3DLoader;
   const tileset = new Tileset3D(tilesetJson);
   tileset.root._visible = true;
   await tileset.root.loadContent();

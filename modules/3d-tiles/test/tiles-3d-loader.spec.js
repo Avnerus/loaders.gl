@@ -17,7 +17,8 @@ test('Tiles3DLoader#Tileset file', async t => {
   t.equals(tileset.type, 'TILES3D');
   t.equals(tileset.lodMetricType, 'geometricError');
   t.equals(tileset.lodMetricValue, 0);
-  t.equals(tileset.loader, Tiles3DLoader);
+  // TODO: when using worker this has to be set externally
+  // t.equals(tileset.loader, Tiles3DLoader);
 
   t.equals(tileset.root.refine, 1);
   t.deepEqual(tileset.root.boundingVolume.region, [
