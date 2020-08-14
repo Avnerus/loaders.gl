@@ -11,6 +11,7 @@ import {StatsWidget} from '@probe.gl/stats-widget';
 
 // To manage dependencies and bundle size, the app must decide which supporting loaders to bring in
 import {CesiumIonLoader} from '@loaders.gl/3d-tiles';
+import {Tiles3DLoader} from '@loaders.gl/3d-tiles';
 
 import ControlPanel from './components/control-panel';
 import {loadExampleIndex, INITIAL_EXAMPLE_CATEGORY, INITIAL_EXAMPLE_NAME} from './examples';
@@ -145,6 +146,7 @@ export default class App extends PureComponent {
 
   // Called by Tile3DLayer when a new tileset is loaded
   _onTilesetLoad(tileset) {
+    tileset.loader = Tiles3DLoader;
     this.setState({tileset});
     this._tilesetStatsWidget.setStats(tileset.stats);
     this._centerViewOnTileset(tileset);

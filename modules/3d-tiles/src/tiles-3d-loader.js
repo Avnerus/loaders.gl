@@ -25,7 +25,6 @@ async function parseTile(arrayBuffer, options, context) {
 async function parseTileset(data, options, context) {
   const tilesetJson = JSON.parse(new TextDecoder().decode(data));
   // eslint-disable-next-line no-use-before-define
-  tilesetJson.loader = options.loader || Tiles3DLoader;
   tilesetJson.url = context.url;
   // base path that non-absolute paths in tileset are relative to.
   tilesetJson.basePath = getBaseUri(tilesetJson);
@@ -42,6 +41,7 @@ async function parse(data, options, context, loader) {
   // auto detect file type
   const loaderOptions = options['3d-tiles'] || {};
   let isTileset;
+
   if (loaderOptions.isTileset === 'auto') {
     isTileset = context.url && context.url.indexOf('.json') !== -1;
   } else {
@@ -58,7 +58,7 @@ async function parse(data, options, context, loader) {
 }
 
 /** @type {LoaderObject} */
-const Tiles3DLoader = {
+export const Tiles3DWorkerLoader = {
   id: '3d-tiles',
   name: '3D Tiles',
   version: VERSION,
@@ -72,9 +72,15 @@ const Tiles3DLoader = {
       decodeQuantizedPositions: false,
       isTileset: 'auto',
       tile: null,
-      tileset: null
+      tileset: null,
+      workerUrl: `https://storage.googleapis.com/rd-pointcloud-testing/tiles-3d-loader.worker.js`
     }
   }
+};
+
+export const Tiles3DLoader = {
+  ...Tiles3DWorkerLoader,
+  parse
 };
 
 export default Tiles3DLoader;
