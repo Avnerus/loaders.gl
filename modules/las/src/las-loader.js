@@ -16,11 +16,12 @@ export const LASWorkerLoader = {
   mimeTypes: ['application/octet-stream'], // TODO - text version?
   text: true,
   binary: true,
-  test: 'LAS',
+  tests: ['LAS'],
   options: {
     las: {
       workerUrl: `https://unpkg.com/@loaders.gl/las@${VERSION}/dist/las-loader.worker.js`,
-      skip: 1
+      skip: 1,
+      colorDepth: 8
     }
   }
 };
