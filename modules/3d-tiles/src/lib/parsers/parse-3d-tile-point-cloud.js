@@ -160,7 +160,10 @@ async function parseDraco(tile, featureTable, batchTable, options, context) {
   let dracoBuffer;
   let dracoFeatureTableProperties;
   let dracoBatchTableProperties;
-  const batchTableDraco = batchTable && batchTable.getExtension('3DTILES_draco_point_compression');
+  const batchTableDraco =
+    tile.batchTableJson &&
+    tile.batchTableJson.extensions &&
+    tile.batchTableJson.extensions['3DTILES_draco_point_compression'];
   if (batchTableDraco) {
     dracoBatchTableProperties = batchTableDraco.properties;
   }
@@ -203,15 +206,14 @@ async function parseDraco(tile, featureTable, batchTable, options, context) {
 // eslint-disable-next-line complexity, max-statements
 export async function loadDraco(tile, dracoData, options, context) {
   const {parse} = context;
-  const data = await parse(dracoData.buffer, DracoLoader, {});
+  const data = await parse(dracoData.buffer, DracoLoader, {
+    extraProperties: dracoData.batchTableProperties
+  });
 
   const decodedPositions = data.attributes.POSITION && data.attributes.POSITION.value;
   const decodedColors = data.attributes.COLOR_0 && data.attributes.COLOR_0.value;
   const decodedNormals = data.attributes.NORMAL && data.attributes.NORMAL.value;
   const decodedBatchIds = data.attributes.BATCH_ID && data.attributes.BATCH_ID.value;
-  const decodedIntensities = data.attributes.INTENSITY && data.attributes.INTENSITY.value;
-  const decodedClassifications =
-    data.attributes.CLASSIFICATION && data.attributes.CLASSIFICATION.value;
   const isQuantizedDraco = decodedPositions && data.attributes.POSITION.value.quantization;
   const isOctEncodedDraco = decodedNormals && data.attributes.NORMAL.value.quantization;
   if (isQuantizedDraco) {
@@ -229,13 +231,22 @@ export async function loadDraco(tile, dracoData, options, context) {
     tile.isOctEncodedDraco = true;
   }
 
+  // Extra batch table attributes
+  const batchTableAttributes = {};
+  if (dracoData.batchTableProperties) {
+    for (const attributeName of Object.keys(dracoData.batchTableProperties)) {
+      if (data.attributes[attributeName].value) {
+        batchTableAttributes[attributeName.toLowerCase()] = data.attributes[attributeName].value;
+      }
+    }
+  }
+
   tile.attributes = {
     positions: decodedPositions,
     colors: normalize3DTileColorAttribute(tile, decodedColors),
     normals: decodedNormals,
     batchIds: decodedBatchIds,
-    intensities: decodedIntensities,
-    classifications: decodedClassifications
+    ...batchTableAttributes
   };
 }
 
