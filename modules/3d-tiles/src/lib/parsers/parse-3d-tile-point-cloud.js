@@ -233,7 +233,7 @@ export async function loadDraco(tile, dracoData, options, context) {
   const batchTableAttributes = {};
   if (dracoData.batchTableProperties) {
     for (const attributeName of Object.keys(dracoData.batchTableProperties)) {
-      if (data.attributes[attributeName].value) {
+      if (data.attributes[attributeName] && data.attributes[attributeName].value) {
         batchTableAttributes[attributeName.toLowerCase()] = data.attributes[attributeName].value;
       }
     }
