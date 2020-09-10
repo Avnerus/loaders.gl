@@ -36,9 +36,7 @@ function initializeTile(tile) {
     positions: null,
     colors: null,
     normals: null,
-    batchIds: null,
-    intensities: null,
-    classifications: null
+    batchIds: null
   };
   tile.isQuantized = false;
   tile.isTranslucent = false;
