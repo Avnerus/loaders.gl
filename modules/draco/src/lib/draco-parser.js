@@ -187,8 +187,8 @@ export default class DracoParser {
         };
       } // }
     }
-    if (options.extraProperties) {
-      for (const [attributeName, attributeUniqueId] of Object.entries(options.extraProperties)) {
+    if (options.extraAttributes) {
+      for (const [attributeName, attributeUniqueId] of Object.entries(options.extraAttributes)) {
         const dracoAttribute = decoder.GetAttributeByUniqueId(dracoGeometry, attributeUniqueId);
 
         const {typedArray} = this.getAttributeTypedArray(

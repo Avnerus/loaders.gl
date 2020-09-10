@@ -205,7 +205,7 @@ async function parseDraco(tile, featureTable, batchTable, options, context) {
 export async function loadDraco(tile, dracoData, options, context) {
   const {parse} = context;
   const data = await parse(dracoData.buffer, DracoLoader, {
-    extraProperties: dracoData.batchTableProperties
+    extraAttributes: dracoData.batchTableProperties
   });
 
   const decodedPositions = data.attributes.POSITION && data.attributes.POSITION.value;
