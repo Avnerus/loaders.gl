@@ -145,6 +145,8 @@ export default class TilesetTraverser {
       !skipLevelOfDetail && tile.refine === TILE_REFINEMENT.REPLACE && tile.hasRenderContent;
 
     let hasVisibleChild = false;
+    let refines = true;
+
     for (const child of children) {
       if (child.isVisibleAndInRequestVolume) {
         if (stack.find(child)) {
@@ -169,13 +171,19 @@ export default class TilesetTraverser {
           childRefines = child.contentAvailable;
         }
 
-        if (!childRefines) {
-          return childRefines;
+        refines = refines && childRefines;
+        // TODO: Ending the iteration here breaks skip traversal (needs stencil tests)
+        if (!refines) {
+          return refines;
         }
       }
     }
 
-    return hasVisibleChild;
+    if (!hasVisibleChild) {
+      refines = false;
+    }
+
+    return refines;
   }
   /* eslint-enable complexity, max-statements */
 

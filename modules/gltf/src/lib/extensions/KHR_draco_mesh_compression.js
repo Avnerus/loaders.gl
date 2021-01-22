@@ -59,11 +59,40 @@ async function decompressPrimitive(primitive, scenegraph, options, context) {
 
   // this will generate an exception if DracoLoader is not installed
   const {parse} = context;
-  const decodedData = await parse(bufferCopy, DracoLoader, options, context);
+
+  const dracoOptions = {
+    draco: {
+      ...options.draco
+    },
+    ...(options.worker && {worker: options.worker}),
+    ...(options.reuseWorkers && {reuseWorkers: options.reuseWorkers}),
+    ...(options.maxConcurrency && {maxConcurrency: options.maxConcurrency})
+  };
+  const decodedData = await parse(bufferCopy, DracoLoader, dracoOptions, context);
+
+  const originalAccessors = {};
+
+  for (const [name, index] of [
+    ...Object.entries(primitive.attributes),
+    ['indices', primitive.indices]
+  ]) {
+    originalAccessors[name] = scenegraph.getAccessor(index);
+  }
 
   primitive.attributes = getGLTFAccessors(decodedData.attributes);
+
   if (decodedData.indices) {
     primitive.indices = getGLTFAccessor(decodedData.indices);
+  }
+
+  for (const [name, attr] of [
+    ...Object.entries(primitive.attributes),
+    ['indices', primitive.indices]
+  ]) {
+    if (originalAccessors[name] && originalAccessors[name].min && originalAccessors[name].max) {
+      attr.min = originalAccessors[name].min;
+      attr.max = originalAccessors[name].max;
+    }
   }
 
   // Extension has been processed, delete it

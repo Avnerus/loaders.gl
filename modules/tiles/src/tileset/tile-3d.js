@@ -160,7 +160,8 @@ export default class TileHeader {
   _getPriority() {
     // Check if any reason to abort
     if (!this.isVisible) {
-      return -1;
+      // TODO: Disabing this to enable priority throttling in base traversal (skip traversal needs stencil test)
+      // return -1;
     }
     if (this.contentState === TILE_CONTENT_STATE.UNLOADED) {
       return -1;
