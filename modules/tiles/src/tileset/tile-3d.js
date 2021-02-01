@@ -157,17 +157,42 @@ export default class TileHeader {
     }
   }
 
+  // If skipLevelOfDetail is off try to load child tiles as soon as possible so that their parent can refine sooner.
+  // Additive tiles are prioritized by distance because it subjectively looks better.
+  // Replacement tiles are prioritized by screen space error.
+  // A tileset that has both additive and replacement tiles may not prioritize tiles as effectively since SSE and distance
+  // are different types of values. Maybe all priorities need to be normalized to 0-1 range.
   _getPriority() {
+    const traverser = this.tileset._traverser;
+
     // Check if any reason to abort
-    if (!this.isVisible) {
-      // TODO: Disabing this to enable priority throttling in base traversal (skip traversal needs stencil test)
-      // return -1;
+    if (!this.isVisible && traverser.options.skipLevelOfDetail) {
+      return -1;
     }
     if (this.contentState === TILE_CONTENT_STATE.UNLOADED) {
       return -1;
     }
 
-    return Math.max(1e7 - this._priority, 0) || 0;
+    switch (this.refine) {
+      case TILE_REFINEMENT.ADD:
+        return this._distanceToCamera;
+
+      case TILE_REFINEMENT.REPLACE:
+        const parent = this.parent;
+        const useParentScreenSpaceError =
+          parent &&
+          (!traverser.options.skipLevelOfDetail ||
+            this._screenSpaceError === 0.0 ||
+            parent.hasTilesetContent);
+        const screenSpaceError = useParentScreenSpaceError
+          ? parent._screenSpaceError
+          : this._screenSpaceError;
+
+        const rootScreenSpaceError = traverser.root._screenSpaceError;
+        return Math.max(rootScreenSpaceError - screenSpaceError, 0); // Map higher SSE to lower values (e.g. root tile is highest priority)
+      default:
+        return assert(false);
+    }
   }
 
   // Requests the tile's content.

@@ -456,7 +456,7 @@ export default class Tileset3D {
   }
 
   _unloadTile(tile) {
-    this.gpuMemoryUsageInBytes -= tile.content.byteLength || 0;
+    this.gpuMemoryUsageInBytes -= (tile.content && tile.content.byteLength) || 0;
 
     this.stats.get(TILES_IN_MEMORY).decrementCount();
     this.stats.get(TILES_UNLOADED).incrementCount();

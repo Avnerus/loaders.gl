@@ -1,6 +1,5 @@
 import ManagedArray from '../../utils/managed-array';
 import {TILE_REFINEMENT} from '../../constants';
-import {assert} from '@loaders.gl/loader-utils';
 
 export const DEFAULT_OPTIONS = {
   loadSiblings: false,
@@ -172,9 +171,9 @@ export default class TilesetTraverser {
         }
 
         refines = refines && childRefines;
-        // TODO: Ending the iteration here breaks skip traversal (needs stencil tests)
-        if (!refines) {
-          return refines;
+
+        if (!refines && !skipLevelOfDetail) {
+          return false;
         }
       }
     }
@@ -204,7 +203,7 @@ export default class TilesetTraverser {
   loadTile(tile, frameState) {
     if (this.shouldLoadTile(tile, frameState)) {
       tile._requestedFrame = frameState.frameNumber;
-      tile._priority = this.getPriority(tile);
+      tile._priority = tile._getPriority(tile);
       this.requestedTiles[tile.id] = tile;
     }
   }
@@ -267,36 +266,6 @@ export default class TilesetTraverser {
 
   compareDistanceToCamera(b, a) {
     return b._distanceToCamera - a._distanceToCamera;
-  }
-
-  // If skipLevelOfDetail is off try to load child tiles as soon as possible so that their parent can refine sooner.
-  // Additive tiles are prioritized by distance because it subjectively looks better.
-  // Replacement tiles are prioritized by screen space error.
-  // A tileset that has both additive and replacement tiles may not prioritize tiles as effectively since SSE and distance
-  // are different types of values. Maybe all priorities need to be normalized to 0-1 range.
-  // TODO move to tile-3d-header
-  getPriority(tile) {
-    const {options} = this;
-    switch (tile.refine) {
-      case TILE_REFINEMENT.ADD:
-        return tile._distanceToCamera;
-
-      case TILE_REFINEMENT.REPLACE:
-        const {parent} = tile;
-        const useParentScreenSpaceError =
-          parent &&
-          (!options.skipLevelOfDetail ||
-            tile._screenSpaceError === 0.0 ||
-            parent.hasTilesetContent);
-        const screenSpaceError = useParentScreenSpaceError
-          ? parent._screenSpaceError
-          : tile._screenSpaceError;
-        const rootScreenSpaceError = this.root._screenSpaceError;
-        return rootScreenSpaceError - screenSpaceError; // Map higher SSE to lower values (e.g. root tile is highest priority)
-
-      default:
-        return assert(false);
-    }
   }
 
   anyChildrenVisible(tile, frameState) {
