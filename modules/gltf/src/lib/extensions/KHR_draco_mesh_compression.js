@@ -64,9 +64,9 @@ async function decompressPrimitive(primitive, scenegraph, options, context) {
     draco: {
       ...options.draco
     },
-    ...(options.worker && {worker: options.worker}),
-    ...(options.reuseWorkers && {reuseWorkers: options.reuseWorkers}),
-    ...(options.maxConcurrency && {maxConcurrency: options.maxConcurrency})
+    ...(typeof options.worker !== 'undefined' && {worker: options.worker}),
+    ...(typeof options.reuseWorkers !== 'undefined' && {reuseWorkers: options.reuseWorkers}),
+    ...(typeof options.maxConcurrency !== 'undefined' && {maxConcurrency: options.maxConcurrency})
   };
   const decodedData = await parse(bufferCopy, DracoLoader, dracoOptions, context);
 
