@@ -55,6 +55,12 @@ export default class WorkerFarm {
 
   _getWorkerPool(workerSource, workerName) {
     let workerPool = this.workerPools.get(workerName);
+
+    if (workerPool && workerPool.maxConcurrency !== this.maxConcurrency) {
+      workerPool.destroy();
+      workerPool = null;
+    }
+
     if (!workerPool) {
       workerPool = new WorkerPool({
         source: workerSource,
