@@ -203,7 +203,7 @@ export default class TilesetTraverser {
   loadTile(tile, frameState) {
     if (this.shouldLoadTile(tile, frameState)) {
       tile._requestedFrame = frameState.frameNumber;
-      tile._priority = tile._getPriority(tile);
+      tile._priority = tile._getPriority();
       this.requestedTiles[tile.id] = tile;
     }
   }
