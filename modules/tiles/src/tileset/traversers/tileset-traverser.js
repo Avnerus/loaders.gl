@@ -218,10 +218,6 @@ export default class TilesetTraverser {
   // tile should have children
   // tile LoD (level of detail) is not sufficient under current viewport
   canTraverse(tile, frameState, useParentMetric = false, ignoreVisibility = false) {
-    if (!ignoreVisibility && !tile.isVisibleAndInRequestVolume) {
-      return false;
-    }
-
     if (!tile.hasChildren) {
       return false;
     }
@@ -231,6 +227,10 @@ export default class TilesetTraverser {
       // Traverse external this to visit its root tile
       // Don't traverse if the subtree is expired because it will be destroyed
       return !tile.contentExpired;
+    }
+
+    if (!ignoreVisibility && !tile.isVisibleAndInRequestVolume) {
+      return false;
     }
 
     return this.shouldRefine(tile, frameState, useParentMetric);
@@ -284,28 +284,36 @@ export default class TilesetTraverser {
     let allDescendantsLoaded = true;
     const stack = this._emptyTraversalStack;
 
+    stack.push(root);
+
     while (stack.length > 0) {
       const tile = stack.pop();
 
+      /* TODO: This doesn't seem needed, should check further.
+       *
       this.updateTile(tile, frameState);
 
       if (!tile.isVisibleAndInRequestVolume) {
         // Load tiles that aren't visible since they are still needed for the parent to refine
         this.loadTile(tile, frameState);
         this.touchTile(tile, frameState);
-      }
+      }*/
+
+      // Touch all tiles in empty traversal
+      // TODO: Can be optimized to visible only?
+      this.touchTile(tile, frameState);
 
       // Only traverse if the tile is empty - traversal stop at descendants with content
       const traverse = !tile.hasRenderContent && this.canTraverse(tile, frameState, false, true);
 
       // Traversal stops but the tile does not have content yet.
       // There will be holes if the parent tries to refine to its children, so don't refine.
-      if (!traverse && !tile.contentAvailable) {
+      if (!traverse && !tile.contentAvailable && tile.hasRenderContent) {
         allDescendantsLoaded = false;
       }
 
       if (traverse) {
-        const children = tile.children.filter(c => c);
+        const children = tile.children;
         for (const child of children) {
           // eslint-disable-next-line max-depth
           if (stack.find(child)) {
