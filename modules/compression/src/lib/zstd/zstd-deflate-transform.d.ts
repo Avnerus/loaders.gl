@@ -7,7 +7,7 @@ export default class ZstdDeflateTransform implements IncrementalTransform {
   /**
    * Atomic deflate convenience
    */
-  static deflate(input: ArrayBuffer, options?: object): Promise<ArrayBuffer>;
+  static run(input: ArrayBuffer, options?: object): Promise<ArrayBuffer>;
 
   /**
    * Alternate interface for chunking & without exceptions

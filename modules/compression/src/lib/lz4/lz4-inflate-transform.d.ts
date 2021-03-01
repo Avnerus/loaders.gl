@@ -7,8 +7,7 @@ export default class LZ4InflateTransform implements IncrementalTransform {
   /**
    * Atomic inflate
    */
-  static inflate(input: ArrayBuffer, options?: object): Promise<ArrayBuffer>;
-  static inflateSync(input: ArrayBuffer, options?: object): ArrayBuffer;
+  static run(input: ArrayBuffer, options?: object): Promise<ArrayBuffer>;
 
   /**
    * Alternate interface for chunking & without exceptions

@@ -1,11 +1,15 @@
-import {ZstdCodec} from 'zstd-codec';
 import {concatenateArrayBuffers} from '@loaders.gl/loader-utils';
 
+// zstd-codec is a dev dependency due to big size
+import {loadZstdLibrary} from './load-zstd-library';
+
 export default class ZstdDeflateTransform {
-  static deflate(input, options) {
+  static async run(input, options) {
     const inputArray = new Uint8Array(input);
 
-    return new Promise(resolve => {
+    const ZstdCodec = await loadZstdLibrary(options);
+
+    return await new Promise(resolve => {
       ZstdCodec.run(zstd => {
         const simple = new zstd.Simple();
         const output = simple.compress(inputArray);
@@ -27,6 +31,6 @@ export default class ZstdDeflateTransform {
 
   async end() {
     const arrayBuffer = concatenateArrayBuffers(...this._chunks);
-    return ZstdDeflateTransform.deflate(arrayBuffer);
+    return ZstdDeflateTransform.run(arrayBuffer);
   }
 }

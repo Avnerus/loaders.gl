@@ -1,15 +1,13 @@
 import test from 'tape-promise/tape';
 
 import {BasisLoader} from '@loaders.gl/textures';
-import {setLoaderOptions} from '@loaders.gl/core';
+import {load, setLoaderOptions} from '@loaders.gl/core';
 
-// const TEST_URL = '@loaders.gl/textures/test/data/alpha3.basis';
+const TEST_URL = '@loaders.gl/textures/test/data/alpha3.basis';
 
 setLoaderOptions({
-  CDN: null,
-  basis: {
-    workerUrl: 'modules/textures/dist/basis-loader.worker.js'
-  }
+  _workerType: 'test',
+  CDN: null
 });
 
 test('BasisLoader#imports', t => {
@@ -17,41 +15,39 @@ test('BasisLoader#imports', t => {
   t.end();
 });
 
-// TODO: Uncomment this test as soon as texture module is published on npm
-// test('BasisLoader#load(URL, worker: false)', async t => {
-//   const images = await load(TEST_URL, BasisLoader, {worker: false});
+test('BasisLoader#load(URL, worker: false)', async t => {
+  const images = await load(TEST_URL, BasisLoader, {worker: false});
 
-//   const image = images[0][0];
+  const image = images[0][0];
 
-//   t.ok(image, 'image loaded successfully from URL');
+  t.ok(image, 'image loaded successfully from URL');
 
-//   t.equals(image.width, 768, 'image width is correct');
-//   t.equals(image.height, 512, 'image height is correct');
-//   t.equals(image.compressed, false, 'image height is correct');
+  t.equals(image.width, 768, 'image width is correct');
+  t.equals(image.height, 512, 'image height is correct');
+  t.equals(image.compressed, false, 'image height is correct');
 
-//   t.ok(ArrayBuffer.isView(image.data), 'image data is `ArrayBuffer`');
-//   t.equals(image.data.byteLength, 786432, 'image `data.byteLength` is correct');
+  t.ok(ArrayBuffer.isView(image.data), 'image data is `ArrayBuffer`');
+  t.equals(image.data.byteLength, 786432, 'image `data.byteLength` is correct');
 
-//   t.end();
-// });
+  t.end();
+});
 
-// TODO: Uncomment this test as soon as texture module is published on npm
-// test('BasisLoader#load(URL, worker: true)', async t => {
-//   const images = await load(TEST_URL, BasisLoader, {worker: true});
+test('BasisLoader#load(URL, worker: true)', async t => {
+  const images = await load(TEST_URL, BasisLoader, {worker: true});
 
-//   const image = images[0][0];
+  const image = images[0][0];
 
-//   t.ok(image, 'image loaded successfully from URL');
+  t.ok(image, 'image loaded successfully from URL');
 
-//   t.equals(image.width, 768, 'image width is correct');
-//   t.equals(image.height, 512, 'image height is correct');
-//   t.equals(image.compressed, false, 'image height is correct');
+  t.equals(image.width, 768, 'image width is correct');
+  t.equals(image.height, 512, 'image height is correct');
+  t.equals(image.compressed, false, 'image height is correct');
 
-//   t.ok(ArrayBuffer.isView(image.data), 'image data is `ArrayBuffer`');
-//   t.equals(image.data.byteLength, 786432, 'image `data.byteLength` is correct');
+  t.ok(ArrayBuffer.isView(image.data), 'image data is `ArrayBuffer`');
+  t.equals(image.data.byteLength, 786432, 'image `data.byteLength` is correct');
 
-//   t.end();
-// });
+  t.end();
+});
 
 // test('BasisLoader#formats', async t => {
 //   for (const testCase of TEST_CASES) {

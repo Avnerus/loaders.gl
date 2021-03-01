@@ -15,8 +15,16 @@ import {
   I3S_NAMED_GEOMETRY_ATTRIBUTES
 } from './constants';
 import {getUrlWithToken} from './url-utils';
+import {CompressedTextureLoader} from '@loaders.gl/textures';
 
 const scratchVector = new Vector3([0, 0, 0]);
+
+const FORMAT_LOADER_MAP = {
+  jpeg: ImageLoader,
+  png: ImageLoader,
+  'ktx-etc2': CompressedTextureLoader,
+  dds: CompressedTextureLoader
+};
 
 export async function parseI3STileContent(arrayBuffer, tile, tileset, options) {
   tile.content = tile.content || {};
@@ -27,8 +35,20 @@ export async function parseI3STileContent(arrayBuffer, tile, tileset, options) {
 
   if (tile.textureUrl) {
     const url = getUrlWithToken(tile.textureUrl, options.token);
-    tile.content.texture = await load(url, ImageLoader);
+    const loader = FORMAT_LOADER_MAP[tile.textureFormat] || ImageLoader;
+    tile.content.texture = await load(url, loader);
+    if (loader === CompressedTextureLoader) {
+      tile.content.texture = {
+        compressed: true,
+        mipmaps: false,
+        width: tile.content.texture[0].width,
+        height: tile.content.texture[0].height,
+        data: tile.content.texture
+      };
+    }
   }
+
+  tile.content.material = makePbrMaterial(tile.materialDefinition, tile.content.texture);
 
   return await parseI3SNodeGeometry(arrayBuffer, tile, options);
 }
@@ -44,16 +64,23 @@ async function parseI3SNodeGeometry(arrayBuffer, tile = {}, options) {
   let vertexCount;
   let byteOffset = 0;
   let featureCount = 0;
-  if (options.i3s.useDracoGeometry && options.i3s.dracoGeometryIndex !== -1) {
+  if (tile.isDracoGeometry) {
     const decompressedGeometry = await parse(arrayBuffer, DracoLoader);
     vertexCount = decompressedGeometry.header.vertexCount;
     const indices = decompressedGeometry.indices.value;
-    const {POSITION, NORMAL, COLOR_0, TEXCOORD_0} = decompressedGeometry.attributes;
+    const {
+      POSITION,
+      NORMAL,
+      COLOR_0,
+      TEXCOORD_0,
+      CUSTOM_ATTRIBUTE_3
+    } = decompressedGeometry.attributes;
     attributes = {
       position: flattenAttribute(POSITION, indices),
       normal: flattenAttribute(NORMAL, indices),
       color: flattenAttribute(COLOR_0, indices),
-      uv0: flattenAttribute(TEXCOORD_0, indices)
+      uv0: flattenAttribute(TEXCOORD_0, indices),
+      id: flattenAttribute(CUSTOM_ATTRIBUTE_3, indices)
     };
   } else {
     const {
@@ -84,6 +111,14 @@ async function parseI3SNodeGeometry(arrayBuffer, tile = {}, options) {
       featureCount,
       featureAttributeOrder
     );
+
+    // TODO parse Uint64 attributes properly.
+    // They are not the same as in compressed attributes.
+    // Also featureIds needs to be flatten by face range.
+    // Lets set them as new Float32Array(0) for now to avoid error in non compressed attributes.
+    normalizedFeatureAttributes.id.value = new Float32Array(
+      normalizedVertexAttributes.position.value.length
+    );
     attributes = concatAttributes(normalizedVertexAttributes, normalizedFeatureAttributes);
   }
 
@@ -102,6 +137,13 @@ async function parseI3SNodeGeometry(arrayBuffer, tile = {}, options) {
     featureIds: attributes.id,
     faceRange: attributes.faceRange
   };
+
+  // Remove undefined attributes
+  for (const attributeIndex in content.attributes) {
+    if (!content.attributes[attributeIndex]) {
+      delete content.attributes[attributeIndex];
+    }
+  }
 
   content.vertexCount = vertexCount;
   content.cartographicCenter = cartographicOrigin;
@@ -123,6 +165,9 @@ function concatAttributes(normalizedVertexAttributes, normalizedFeatureAttribute
 }
 
 function flattenAttribute(attribute, indices) {
+  if (!attribute) {
+    return null;
+  }
   const TypedArrayConstructor = attribute.value.constructor;
   const result = new TypedArrayConstructor(indices.length * attribute.size);
   for (let i = 0; i < indices.length; i++) {
@@ -136,7 +181,7 @@ function flattenAttribute(attribute, indices) {
       i * attribute.size
     );
   }
-  return {size: attribute.size, value: result};
+  return {...attribute, value: result};
 }
 
 function constructFeatureDataStruct(tile, tileset) {
@@ -246,12 +291,13 @@ function normalizeAttributes(
 function parsePositions(attribute, tile) {
   const mbs = tile.mbs;
   const value = attribute.value;
+  const metadata = attribute.metadata;
   const enuMatrix = new Matrix4();
   const cartographicOrigin = new Vector3(mbs[0], mbs[1], mbs[2]);
   const cartesianOrigin = new Vector3();
   Ellipsoid.WGS84.cartographicToCartesian(cartographicOrigin, cartesianOrigin);
   Ellipsoid.WGS84.eastNorthUpToFixedFrame(cartesianOrigin, enuMatrix);
-  attribute.value = offsetsToCartesians(value, cartographicOrigin);
+  attribute.value = offsetsToCartesians(value, metadata, cartographicOrigin);
 
   return {
     enuMatrix,
@@ -261,11 +307,21 @@ function parsePositions(attribute, tile) {
   };
 }
 
-function offsetsToCartesians(vertices, cartographicOrigin) {
+/**
+ * Converts position coordinates to absolute cartesian coordinates
+ * @param {Float32Array} vertices - "position" attribute data
+ * @param {Object} metadata - When the geometry is DRACO compressed, contain position attribute's metadata
+ *  https://github.com/Esri/i3s-spec/blob/master/docs/1.7/compressedAttributes.cmn.md
+ * @param {Vector3} cartographicOrigin - Cartographic origin coordinates
+ * @returns {Float64Array} - converted "position" data
+ */
+function offsetsToCartesians(vertices, metadata = {}, cartographicOrigin) {
   const positions = new Float64Array(vertices.length);
+  const scaleX = (metadata['i3s-scale_x'] && metadata['i3s-scale_x'].double) || 1;
+  const scaleY = (metadata['i3s-scale_y'] && metadata['i3s-scale_y'].double) || 1;
   for (let i = 0; i < positions.length; i += 3) {
-    positions[i] = vertices[i] + cartographicOrigin.x;
-    positions[i + 1] = vertices[i + 1] + cartographicOrigin.y;
+    positions[i] = vertices[i] * scaleX + cartographicOrigin.x;
+    positions[i + 1] = vertices[i + 1] * scaleY + cartographicOrigin.y;
     positions[i + 2] = vertices[i + 2] + cartographicOrigin.z;
   }
 
@@ -278,4 +334,90 @@ function offsetsToCartesians(vertices, cartographicOrigin) {
   }
 
   return positions;
+}
+
+/**
+ * Makes a glTF-compatible PBR material from an I3S material definition
+ * @param {object} materialDefinition - i3s material definition
+ *  https://github.com/Esri/i3s-spec/blob/master/docs/1.7/materialDefinitions.cmn.md
+ * @param {object} texture - texture image
+ * @returns {object}
+ */
+function makePbrMaterial(materialDefinition, texture) {
+  if (!materialDefinition) {
+    return null;
+  }
+  const pbrMaterial = {
+    ...materialDefinition,
+    pbrMetallicRoughness: materialDefinition.pbrMetallicRoughness
+      ? {...materialDefinition.pbrMetallicRoughness}
+      : {baseColorFactor: [255, 255, 255, 255]}
+  };
+
+  // Set default 0.25 per spec https://github.com/Esri/i3s-spec/blob/master/docs/1.7/materialDefinitions.cmn.md
+  pbrMaterial.alphaCutoff = pbrMaterial.alphaCutoff || 0.25;
+
+  if (pbrMaterial.alphaMode) {
+    // I3S contain alphaMode in lowerCase
+    pbrMaterial.alphaMode = pbrMaterial.alphaMode.toUpperCase();
+  }
+
+  // Convert colors from [255,255,255,255] to [1,1,1,1]
+  if (pbrMaterial.emissiveFactor) {
+    pbrMaterial.emissiveFactor = convertColorFormat(pbrMaterial.emissiveFactor);
+  }
+  if (pbrMaterial.pbrMetallicRoughness && pbrMaterial.pbrMetallicRoughness.baseColorFactor) {
+    pbrMaterial.pbrMetallicRoughness.baseColorFactor = convertColorFormat(
+      pbrMaterial.pbrMetallicRoughness.baseColorFactor
+    );
+  }
+
+  setMaterialTexture(pbrMaterial, texture);
+
+  return pbrMaterial;
+}
+
+/**
+ * Convert color from [255,255,255,255] to [1,1,1,1]
+ * @param {Array} colorFactor - color array
+ * @returns {Array} - new color array
+ */
+function convertColorFormat(colorFactor) {
+  const normalizedColor = [...colorFactor];
+  for (let index = 0; index < colorFactor.length; index++) {
+    normalizedColor[index] = colorFactor[index] / 255;
+  }
+  return normalizedColor;
+}
+
+/**
+ * Set texture in PBR material
+ * @param {object} material - i3s material definition
+ * @param {object} image - texture image
+ * @returns {void}
+ */
+function setMaterialTexture(material, image) {
+  const texture = {source: {image}};
+  // I3SLoader now support loading only one texture. This elseif sequence will assign this texture to one of
+  // properties defined in materialDefinition
+  if (material.pbrMetallicRoughness && material.pbrMetallicRoughness.baseColorTexture) {
+    material.pbrMetallicRoughness.baseColorTexture = {
+      ...material.pbrMetallicRoughness.baseColorTexture,
+      texture
+    };
+  } else if (material.emissiveTexture) {
+    material.emissiveTexture = {...material.emissiveTexture, texture};
+  } else if (
+    material.pbrMetallicRoughness &&
+    material.pbrMetallicRoughness.metallicRoughnessTexture
+  ) {
+    material.pbrMetallicRoughness.metallicRoughnessTexture = {
+      ...material.pbrMetallicRoughness.metallicRoughnessTexture,
+      texture
+    };
+  } else if (material.normalTexture) {
+    material.normalTexture = {...material.normalTexture, texture};
+  } else if (material.occlusionTexture) {
+    material.occlusionTexture = {...material.occlusionTexture, texture};
+  }
 }

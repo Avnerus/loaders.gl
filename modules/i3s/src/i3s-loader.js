@@ -3,6 +3,7 @@
 import {load} from '@loaders.gl/core';
 import {normalizeTileData, normalizeTilesetData} from './lib/parsers/parse-i3s';
 import {parseI3STileContent} from './lib/parsers/parse-i3s-tile-content';
+import {I3SAttributeLoader} from './i3s-attribute-loader';
 
 // __VERSION__ is injected by babel-plugin-version-inline
 // @ts-ignore TS2304: Cannot find name '__VERSION__'.
@@ -11,32 +12,14 @@ const VERSION = typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'latest';
 const TILESET_REGEX = /layers\/[0-9]+$/;
 const TILE_HEADER_REGEX = /nodes\/([0-9-]+|root)$/;
 
-async function parseTileContent(arrayBuffer, options, context) {
-  const tile = options.i3s.tile;
-  const tileset = options.i3s.tileset;
-  tile.content = tile.content || {};
-  await parseI3STileContent(arrayBuffer, tile, tileset, options);
-  return tile.content;
-}
-
-async function parseTileset(data, options, context) {
-  const tilesetJson = JSON.parse(new TextDecoder().decode(data));
-  // eslint-disable-next-line no-use-before-define
-  tilesetJson.loader = I3SLoader;
-  await normalizeTilesetData(tilesetJson, options, context);
-
-  return tilesetJson;
-}
-
-async function parseTile(data, options, context) {
-  data = JSON.parse(new TextDecoder().decode(data));
-  return normalizeTileData(data, options, context);
-}
-
-/** @type {LoaderObject} */
-const I3SLoader = {
+/**
+ * Loader for I3S - Indexed 3D Scene Layer
+ * @type {LoaderObject}
+ */
+export const I3SLoader = {
+  name: 'I3S (Indexed Scene Layers)',
   id: 'i3s',
-  name: 'I3S 3D Tiles',
+  module: 'i3s',
   version: VERSION,
   mimeTypes: ['application/octet-stream'],
   parse,
@@ -48,10 +31,9 @@ const I3SLoader = {
       isTileHeader: 'auto',
       tile: null,
       tileset: null,
-      // Index of 'draco' geometry definition in 'geometryDefinitions' array
-      // https://github.com/Esri/i3s-spec/blob/master/docs/1.7/geometryDefinition.cmn.md
-      dracoGeometryIndex: -1,
-      useDracoGeometry: false
+      useDracoGeometry: true,
+      useCompressedTextures: true,
+      loadFeatureAttributes: true
     }
   }
 };
@@ -90,4 +72,59 @@ async function parse(data, options, context, loader) {
   return data;
 }
 
-export default I3SLoader;
+async function parseTileContent(arrayBuffer, options, context) {
+  const {tile, tileset, loadFeatureAttributes} = options.i3s;
+  tile.content = tile.content || {};
+  tile.userData = tile.userData || {};
+  await parseI3STileContent(arrayBuffer, tile, tileset, options);
+
+  if (loadFeatureAttributes) {
+    await parseFeatureAttributes(tile, tileset);
+  }
+
+  return tile.content;
+}
+
+async function parseTileset(data, options, context) {
+  const tilesetJson = JSON.parse(new TextDecoder().decode(data));
+  // eslint-disable-next-line no-use-before-define
+  tilesetJson.loader = I3SLoader;
+  await normalizeTilesetData(tilesetJson, options, context);
+
+  return tilesetJson;
+}
+
+async function parseTile(data, options, context) {
+  data = JSON.parse(new TextDecoder().decode(data));
+  return normalizeTileData(data, options, context);
+}
+
+async function parseFeatureAttributes(tile, tileset) {
+  const attributeStorageInfo = tileset.attributeStorageInfo;
+  const attributeUrls = tile.attributeUrls;
+  const attributes = [];
+
+  for (let index = 0; index < attributeStorageInfo.length; index++) {
+    const url = attributeUrls[index];
+    const attributeName = attributeStorageInfo[index].name;
+    const attributeType = getAttributeValueType(attributeStorageInfo[index]);
+
+    try {
+      const attribute = await load(url, I3SAttributeLoader, {attributeName, attributeType});
+      attributes.push(attribute);
+    } catch (error) {
+      // do nothing
+    }
+  }
+
+  tile.userData.layerFeaturesAttributes = attributes;
+}
+
+function getAttributeValueType(attribute) {
+  if (attribute.hasOwnProperty('objectIds')) {
+    return 'Oid32';
+  } else if (attribute.hasOwnProperty('attributeValues')) {
+    return attribute.attributeValues.valueType;
+  }
+  return null;
+}

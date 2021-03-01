@@ -1,6 +1,6 @@
 import test from 'tape-promise/tape';
 import {Tiles3DLoader} from '@loaders.gl/3d-tiles';
-import {loadI3STile} from '@loaders.gl/i3s/test/lib/utils/load-utils';
+import {loadI3STile} from '@loaders.gl/i3s/test/test-utils/load-utils';
 import B3dmConverter from '../../../src/3d-tiles-converter/helpers/b3dm-converter';
 import {isBrowser} from '@loaders.gl/core';
 import {load} from '@loaders.gl/core';
@@ -71,6 +71,8 @@ test('tile-converter - b3dm converter#should convert i3s node data to b3dm encod
     t.ok(attributes);
     t.equal(attributes.OBJECTID[0], 14238);
     t.equal(attributes.NAME[0], 'Sanfran_island_0197.flt\x00');
+    t.ok(tile.header.userData.layerFeaturesAttributes);
+    t.deepEqual(tile.header.userData.layerFeaturesAttributes, []);
 
     t.end();
   }
@@ -144,6 +146,25 @@ test('tile-converter - b3dm converter#should not convert incorrect normals', asy
     t.ok(decodedContent2);
     t.ok(decodedContent2.gltf.meshes[0].primitives[0].attributes);
     t.notOk(decodedContent2.gltf.meshes[0].primitives[0].attributes.NORMAL);
+
+    t.end();
+  }
+});
+
+test('tile-converter - b3dm converter#should handle geometry without normals', async t => {
+  if (!isBrowser) {
+    const tile = await loadI3STile();
+    const b3dmConverter = new B3dmConverter();
+
+    delete tile.content.attributes.normals;
+    const encodedContent = await b3dmConverter.convert(tile);
+    const decodedContent = await load(encodedContent, Tiles3DLoader, {
+      isTileset: false,
+      tile: {type: 'b3dm'}
+    });
+    t.ok(decodedContent);
+    t.ok(decodedContent.gltf.meshes[0].primitives[0].attributes);
+    t.notOk(decodedContent.gltf.meshes[0].primitives[0].attributes.NORMAL);
 
     t.end();
   }

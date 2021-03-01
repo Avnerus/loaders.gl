@@ -1,15 +1,55 @@
+export type TypedIntArray =
+  Int8Array | Uint8Array |
+  Int16Array | Uint16Array |
+  Int32Array | Uint32Array |
+  Int32Array | Uint32Array;
+
+export type TypedFloatArray =
+    Uint16Array |
+    Float32Array |
+    Float64Array;
+
+export type TypedArray = TypedIntArray | TypedFloatArray;
+
+export type NumericArray = Array<number> | TypedIntArray | TypedFloatArray;
+
 /**
- * A loader defintion that can be used with `@loaders.gl/core` functions
- */
-export type WorkerLoaderObject = {
-  id: string,
-  name: string,
-  category?: string;
-  version: string,
-  extensions: string[],
-  mimeTypes: string[],
+export {WorkerObject} from '@loaders.gl/worker-utils'
+ * A worker description
+export type WorkerObject = {
+  name: string;
+  id: string;
+  module: string;
+  version: string;
+  worker?: string;
   options: object;
   deprecatedOptions?: object;
+
+  process?: (data: any, options?: object) => Promise<any>;
+  processInBatches?: (
+    iterator: AsyncIterator<any> | Iterator<any>, 
+    options: object
+  ) => Promise<AsyncIterator<any>>;
+};
+ */
+
+/**
+ * A worker loader defintion that can be used with `@loaders.gl/core` functions
+ */
+export type WorkerLoaderObject = {
+  // WorkerObject
+  name: string,
+  id: string,
+  module: string;
+  version: string,
+  worker: string | boolean;
+  options: object;
+  deprecatedOptions?: object;
+  // end WorkerObject
+
+  category?: string;
+  extensions: string[],
+  mimeTypes: string[],
 
   binary?: boolean;
   text?: boolean;
@@ -21,20 +61,34 @@ export type WorkerLoaderObject = {
   testText?: (string) => boolean;
 };
 
+/**
+ * A "bundled" loader defintion that can be used with `@loaders.gl/core` functions
+ * If a worker loader is supported it will also be supported.
+ */
 export type LoaderObject = {
-  id: string,
+  // WorkerObject
   name: string,
-  category?: string;
+  id: string,
+  module: string;
   version: string,
-  extensions: string[],
-  mimeTypes: string[],
+  worker?: string | boolean;
+
   options: object;
   deprecatedOptions?: object;
+  // end WorkerObject
+
+  category?: string;
+  extensions: string[],
+  mimeTypes: string[],
 
   binary?: boolean;
   text?: boolean;
 
   tests?: (((ArrayBuffer) => boolean) | ArrayBuffer | string)[];
+
+  // TODO - deprecated
+  supported?: boolean;
+  testText?: (string) => boolean;
 
   parse: (arrayBuffer, options, context?) => Promise<any>;
   parseSync?: (arrayBuffer, options, context?) => any;
@@ -45,20 +99,29 @@ export type LoaderObject = {
     options: object, 
     context?: object
   ) => Promise<AsyncIterator<any>> | AsyncIterator<any>;
-
-  // TODO - deprecated
-  supported?: boolean;
-  testText?: (string) => boolean;
 };
 
 /**
  * A writer defintion that can be used with `@loaders.gl/core` functions
  */
 export type WriterObject = {
+  name: string,
+
+  id: string,
+  module: string;
+  version: string,
+
   options: object;
   deprecatedOptions?: object;
 
-  encode(data: any, options: object): Promise<ArrayBuffer>
+  // TODO - are these are needed?
+  binary?: boolean;
+  extensions?: string[];
+  mimeTypes?: string[];
+
+  encode?: (data: any, options: object) => Promise<ArrayBuffer>;
+  encodeSync?: (data: any, options?: object) => ArrayBuffer;
+  encodeURLtoURL?: (inputUrl: string, outputUrl: string, options?: object) => Promise<string>;
 };
 
 export type LoaderContext = {

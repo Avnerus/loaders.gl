@@ -1,4 +1,6 @@
 import {read} from 'ktx-parse';
+import {extractMipmapImages} from '../utils/extract-mipmap-images';
+import {mapVkFormatToWebGL} from '../utils/ktx-format-helper';
 
 const KTX2_ID = [
   // '´', 'K', 'T', 'X', '2', '0', 'ª', '\r', '\n', '\x1A', '\n'
@@ -38,10 +40,17 @@ export function isKTX(data) {
 
 export function parseKTX(arrayBuffer) {
   const uint8Array = new Uint8Array(arrayBuffer);
-
   const ktx = read(uint8Array);
+  const mipMapLevels = Math.max(1, ktx.levels.length);
+  const width = ktx.pixelWidth;
+  const height = ktx.pixelHeight;
+  const internalFormat = mapVkFormatToWebGL(ktx.vkFormat);
 
-  // TODO - normalize to loaders.gl texture format
-
-  return ktx;
+  return extractMipmapImages(ktx.levels, {
+    mipMapLevels,
+    width,
+    height,
+    sizeFunction: level => level.uncompressedByteLength,
+    internalFormat
+  });
 }

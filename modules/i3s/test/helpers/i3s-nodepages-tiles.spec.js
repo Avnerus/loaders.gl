@@ -1,34 +1,18 @@
 import test from 'tape-promise/tape';
+import {getSupportedGPUTextureFormats} from '@loaders.gl/textures';
 import I3SNodePagesTiles from '../../src/helpers/i3s-nodepages-tiles';
-
-const TILESET_STUB = {
-  fetchOptions: {},
-  nodePages: {
-    nodesPerPage: 64,
-    lodSelectionMetricType: 'maxScreenThresholdSQ'
-  },
-  url: '@loaders.gl/i3s/test/data/SanFrancisco_3DObjects_1_7/SceneServer/layers/0',
-  materialDefinitions: [
-    {
-      doubleSided: true,
-      emissiveFactor: [255, 255, 255],
-      pbrMetallicRoughness: {
-        baseColorTexture: {textureSetDefinitionId: 0}
-      }
-    }
-  ],
-  textureSetDefinitions: [{formats: [{name: '0', format: 'jpg'}]}]
-};
+import {isBrowser} from '@loaders.gl/core';
+import {TILESET_STUB} from '../test-utils/load-utils';
 
 test('I3SNodePagesTiles#Forms tile header from node pages data', async t => {
-  const i3SNodePagesTiles = new I3SNodePagesTiles(TILESET_STUB, {});
+  const i3SNodePagesTiles = new I3SNodePagesTiles(TILESET_STUB(), {});
   const rootNode = await i3SNodePagesTiles.formTileFromNodePages(0);
   t.ok(rootNode);
   t.end();
 });
 
 test('I3SNodePagesTiles#Root tile should not have content', async t => {
-  const i3SNodePagesTiles = new I3SNodePagesTiles(TILESET_STUB, {});
+  const i3SNodePagesTiles = new I3SNodePagesTiles(TILESET_STUB(), {});
   const rootNode = await i3SNodePagesTiles.formTileFromNodePages(0);
   t.ok(rootNode);
   t.notOk(rootNode.contentUrl);
@@ -37,29 +21,40 @@ test('I3SNodePagesTiles#Root tile should not have content', async t => {
 });
 
 test('I3SNodePagesTiles#Tile with content', async t => {
-  const i3SNodePagesTiles = new I3SNodePagesTiles(TILESET_STUB, {});
+  const i3SNodePagesTiles = new I3SNodePagesTiles(TILESET_STUB(), {});
   const node1 = await i3SNodePagesTiles.formTileFromNodePages(1);
   t.ok(node1);
   t.equal(
     node1.contentUrl,
     '@loaders.gl/i3s/test/data/SanFrancisco_3DObjects_1_7/SceneServer/layers/0/nodes/1/geometries/0'
   );
-  t.equal(
-    node1.textureUrl,
-    '@loaders.gl/i3s/test/data/SanFrancisco_3DObjects_1_7/SceneServer/layers/0/nodes/1/textures/0'
-  );
+  if (isBrowser) {
+    t.equal(
+      node1.textureUrl,
+      '@loaders.gl/i3s/test/data/SanFrancisco_3DObjects_1_7/SceneServer/layers/0/nodes/1/textures/0_0_1'
+    );
+  } else {
+    t.equal(
+      node1.textureUrl,
+      '@loaders.gl/i3s/test/data/SanFrancisco_3DObjects_1_7/SceneServer/layers/0/nodes/1/textures/0'
+    );
+  }
+
   t.end();
 });
 
 test('I3SNodePagesTiles#Layer without textures', async t => {
-  const i3SNodePagesTiles = new I3SNodePagesTiles({...TILESET_STUB, materialDefinitions: [{}]}, {});
+  const i3SNodePagesTiles = new I3SNodePagesTiles(
+    {...TILESET_STUB(), materialDefinitions: [{}]},
+    {}
+  );
   const node1 = await i3SNodePagesTiles.formTileFromNodePages(1);
   t.ok(node1);
   t.notOk(node1.textureUrl);
 
   const i3SNodePagesTiles2 = new I3SNodePagesTiles(
     {
-      ...TILESET_STUB,
+      ...TILESET_STUB(),
       materialDefinitions: [{pbrMetallicRoughness: {baseColorFactor: [255, 255, 255, 255]}}]
     },
     {}
@@ -70,7 +65,7 @@ test('I3SNodePagesTiles#Layer without textures', async t => {
 
   const i3SNodePagesTiles3 = new I3SNodePagesTiles(
     {
-      ...TILESET_STUB,
+      ...TILESET_STUB(),
       textureSetDefinitions: []
     },
     {}
@@ -83,7 +78,7 @@ test('I3SNodePagesTiles#Layer without textures', async t => {
 });
 
 test('I3SNodePagesTiles#Tile should have mbs converted from obb', async t => {
-  const i3SNodePagesTiles = new I3SNodePagesTiles(TILESET_STUB, {});
+  const i3SNodePagesTiles = new I3SNodePagesTiles(TILESET_STUB(), {});
   const node1 = await i3SNodePagesTiles.formTileFromNodePages(1);
   t.ok(node1);
   t.deepEqual(node1.mbs, [
@@ -92,5 +87,126 @@ test('I3SNodePagesTiles#Tile should have mbs converted from obb', async t => {
     189.47502169783516,
     3243.264050599379
   ]);
+  t.end();
+});
+
+test('I3SNodePagesTiles#Select "dds" texture if it is supported', async t => {
+  const i3SNodePagesTiles = new I3SNodePagesTiles(
+    {
+      ...TILESET_STUB(),
+      textureSetDefinitions: [
+        {
+          formats: [
+            {
+              name: '0',
+              format: 'jpg'
+            },
+            {
+              name: '0_0_1',
+              format: 'dds'
+            }
+          ]
+        }
+      ]
+    },
+    {}
+  );
+  const node = await i3SNodePagesTiles.formTileFromNodePages(2);
+  t.ok(node);
+
+  if (isBrowser) {
+    const supportedFormats = getSupportedGPUTextureFormats();
+
+    if (supportedFormats.has('dxt')) {
+      t.equal(
+        node.textureUrl,
+        '@loaders.gl/i3s/test/data/SanFrancisco_3DObjects_1_7/SceneServer/layers/0/nodes/2/textures/0_0_1'
+      );
+      t.deepEqual(i3SNodePagesTiles.textureDefinitionsSelectedFormats, [
+        {name: '0_0_1', format: 'dds'}
+      ]);
+    } else {
+      t.equal(
+        node.textureUrl,
+        '@loaders.gl/i3s/test/data/SanFrancisco_3DObjects_1_7/SceneServer/layers/0/nodes/2/textures/0'
+      );
+      t.deepEqual(i3SNodePagesTiles.textureDefinitionsSelectedFormats, [
+        {name: '0', format: 'jpg'}
+      ]);
+    }
+  } else {
+    t.equal(
+      node.textureUrl,
+      '@loaders.gl/i3s/test/data/SanFrancisco_3DObjects_1_7/SceneServer/layers/0/nodes/2/textures/0'
+    );
+    t.deepEqual(i3SNodePagesTiles.textureDefinitionsSelectedFormats, [{name: '0', format: 'jpg'}]);
+  }
+
+  t.end();
+});
+
+test('I3SNodePagesTiles#Switch off compressed textures', async t => {
+  const i3SNodePagesTiles = new I3SNodePagesTiles(
+    {
+      ...TILESET_STUB(),
+      textureSetDefinitions: [
+        {
+          formats: [
+            {
+              name: '0',
+              format: 'jpg'
+            },
+            {
+              name: '0_0_1',
+              format: 'dds'
+            }
+          ]
+        }
+      ]
+    },
+    {i3s: {useCompressedTextures: false}}
+  );
+  const node = await i3SNodePagesTiles.formTileFromNodePages(2);
+  t.ok(node);
+
+  if (isBrowser) {
+    const supportedFormats = getSupportedGPUTextureFormats();
+
+    if (supportedFormats.has('dxt')) {
+      t.equal(
+        node.textureUrl,
+        '@loaders.gl/i3s/test/data/SanFrancisco_3DObjects_1_7/SceneServer/layers/0/nodes/2/textures/0'
+      );
+      t.deepEqual(i3SNodePagesTiles.textureDefinitionsSelectedFormats, [
+        {name: '0', format: 'jpg'}
+      ]);
+    }
+  }
+
+  t.end();
+});
+
+test('I3SNodePagesTiles#Should load DRACO geometry', async t => {
+  const i3SNodePagesTiles = new I3SNodePagesTiles(TILESET_STUB(), {i3s: {useDracoGeometry: true}});
+  const node1 = await i3SNodePagesTiles.formTileFromNodePages(1);
+  t.ok(node1);
+  t.equal(
+    node1.contentUrl,
+    '@loaders.gl/i3s/test/data/SanFrancisco_3DObjects_1_7/SceneServer/layers/0/nodes/1/geometries/1'
+  );
+
+  const tilesetJson = TILESET_STUB();
+  // Remove compressed geometry metadata from geometry definitions
+  tilesetJson.geometryDefinitions[0].geometryBuffers = tilesetJson.geometryDefinitions[0].geometryBuffers.slice(
+    0,
+    1
+  );
+  const i3SNodePagesTiles2 = new I3SNodePagesTiles(tilesetJson, {i3s: {useDracoGeometry: true}});
+  const node12 = await i3SNodePagesTiles2.formTileFromNodePages(1);
+  t.equal(
+    node12.contentUrl,
+    '@loaders.gl/i3s/test/data/SanFrancisco_3DObjects_1_7/SceneServer/layers/0/nodes/1/geometries/0'
+  );
+
   t.end();
 });

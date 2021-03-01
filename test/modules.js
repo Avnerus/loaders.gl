@@ -6,6 +6,7 @@ const {_addAliases} = require('@loaders.gl/loader-utils');
 const ALIASES = require('./aliases');
 _addAliases(ALIASES);
 
+const TEST_BASE = true;
 const TEST_CORE = true;
 const TEST_IMAGES = true;
 const TEST_MESHES = true;
@@ -21,12 +22,17 @@ const {installFilePolyfills} = require('@loaders.gl/polyfills');
 
 installFilePolyfills();
 
+// base
+if (TEST_BASE) {
+  require('@loaders.gl/polyfills/test');
+  require('@loaders.gl/worker-utils/test');
+  require('@loaders.gl/math/test');
+}
+
 // Core
 if (TEST_CORE) {
-  require('@loaders.gl/polyfills/test');
-  require('@loaders.gl/core/test');
   require('@loaders.gl/loader-utils/test');
-  require('@loaders.gl/math/test');
+  require('@loaders.gl/core/test');
 }
 
 // Image Formats
@@ -75,6 +81,7 @@ if (TEST_TABLES) {
   require('@loaders.gl/arrow/test');
   require('@loaders.gl/csv/test');
   require('@loaders.gl/json/test');
+  require('@loaders.gl/excel/test');
 }
 
 // Archive Formats

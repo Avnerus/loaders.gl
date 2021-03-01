@@ -10,7 +10,6 @@ import {TILE_REFINEMENT, TILE_CONTENT_STATE, TILESET_TYPE} from '../constants';
 import {createBoundingVolume} from './helpers/bounding-volume';
 import {getTiles3DScreenSpaceError} from './helpers/tiles-3d-lod';
 import {getI3ScreenSize} from './helpers/i3s-lod';
-import {getI3SOptions} from './helpers/i3s-options';
 import {get3dTilesOptions} from './helpers/3d-tiles-options';
 
 const scratchVector = new Vector3();
@@ -53,6 +52,7 @@ export default class TileHeader {
     this.children = [];
 
     this.depth = 0;
+    this.userData = {};
 
     // PRIVATE MEMBERS
     this._cacheNode = null;
@@ -564,7 +564,7 @@ export default class TileHeader {
   _getLoaderSpecificOptions(loaderId) {
     switch (loaderId) {
       case 'i3s':
-        return getI3SOptions(this.tileset.tileset);
+        return this.tileset.options.i3s || {};
       case '3d-tiles':
       case 'cesium-ion':
       default:

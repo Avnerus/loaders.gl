@@ -2,17 +2,46 @@
 
 ## Upgrading to v3.0
 
-`@loaders.gl/gltf`:
+**Transpilation**
 
-GLTFScenegraph is updated to provide modifying capabilities. Signatures of some methods have been changed to use named parameters (rather than positional parameters).
+The module entry point is now only lightly transpiled for the most commonly used evergreen browsers. This change offers significant savings on bundle size. If your application needs to support older browsers such as IE 11, make sure to include `node_modules` in your babel config.
 
-`@loaders.gl/basis`:
+**Worker Concurrency**
+
+Default number of worker threads for each loader has been reduced from `5` to `3` on non mobile devices and to `1` on mobile devices to reduce memory use. Generally, increasing the number of workers has diminishing returns.
+
+**@loaders.gl/gltf**
+
+- `GLTFScenegraph` is updated to provide modifying capabilities. Signatures of some methods have been changed to use named parameters (rather than positional parameters).
+- The deprecated `GLBBuilder` class and `encodeGLTFSync` functions have now been removed.
+
+**@loaders.gl/basis**
 
 - Module has been moved to `@loaders.gl/textures`.
 
-`@loaders.gl/images`:
+**@loaders.gl/images**
 
 The texture API `loadImage`, `loadImageArray`, `loadImageCube` has been moved to the new `@loaders.gl/textures` module, and have been renamed to `loadImageTexture*`.
+
+**@loaders.gl/kml**
+
+- The `KMLLoader`, `GPXLoader`, and `TCXLoader` now require a value for `options.gis.format`. Previously, the lack of a value would return data in "raw" format, i.e. not normalized to GeoJSON. To return GeoJSON-formatted data, use `options.gis.format: 'geojson'`. Other options are `binary` and `raw`.
+- The `kml.normalize` option has been deprecated. When `options.gis.format` is `geojson`, coordinates will always be in longitude-latitude ordering.
+
+**@loaders.gl/compression**
+
+- Sync transforms no longer supported (this enables dynamic library loading).
+- Transform static members now named `run()` instead of `inflate()` and `deflate()`.
+- Zstandard transforms removed due to excessive bundle size impact. Use the new `ZstdWorker` object instead.
+
+**@loaders.gl/crypto**
+
+- Sync hashing no longer supported (this enables dynamic library loading).
+- Transform static members now named `run()` instead of `hash()`.
+
+**@loaders.gl/loader-utils**
+
+- `createWorker()` now creates a generic worker. For loader workers use the new `createLoaderWorker()` function.
 
 ## Upgrading to v2.3
 

@@ -1,9 +1,9 @@
-import {assert, validateLoaderVersion} from '@loaders.gl/loader-utils';
+import {assert, validateWorkerVersion} from '@loaders.gl/worker-utils';
+import {parseWithWorker, canParseWithWorker} from '@loaders.gl/loader-utils';
 import {isLoaderObject} from '../loader-utils/normalize-loader';
 import {normalizeOptions} from '../loader-utils/option-utils';
 import {getArrayBufferOrStringFromData} from '../loader-utils/get-data';
 import {getLoaders, getLoaderContext} from '../loader-utils/context-utils';
-import parseWithWorker, {canParseWithWorker} from '../loader-utils/parse-with-worker';
 import {getResourceUrlAndType} from '../utils/resource-utils';
 import {selectLoader} from './select-loader';
 
@@ -45,7 +45,7 @@ export async function parse(data, loaders, options, context) {
 // TODO: support progress and abort
 // TODO - should accept loader.parseAsyncIterator and concatenate.
 async function parseWithLoader(loader, data, options, context) {
-  validateLoaderVersion(loader);
+  validateWorkerVersion(loader);
 
   data = await getArrayBufferOrStringFromData(data, loader);
 
@@ -57,7 +57,7 @@ async function parseWithLoader(loader, data, options, context) {
 
   // If we have a workerUrl and the loader can parse the given options efficiently in a worker
   if (canParseWithWorker(loader, data, options, context)) {
-    return await parseWithWorker(loader, data, options, context);
+    return await parseWithWorker(loader, data, options, context, parse);
   }
 
   // Check for asynchronous parser

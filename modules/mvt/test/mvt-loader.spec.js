@@ -18,9 +18,7 @@ import decodedLinesGeoJSON from '@loaders.gl/mvt/test/results/decoded_mvt_lines.
 import decodedPolygonsGeoJSON from '@loaders.gl/mvt/test/results/decoded_mvt_polygons.json';
 
 setLoaderOptions({
-  mvt: {
-    workerUrl: 'modules/mvt/dist/mvt-loader.worker.js'
-  }
+  _workerType: 'test'
 });
 
 test('Point MVT to local coordinates JSON', async t => {
@@ -197,6 +195,16 @@ test('Polygon MVT to local coordinates binary', async t => {
   t.ok(geometryBinary.byteLength > 0);
   delete geometryBinary.byteLength;
   t.deepEqual(geometryBinary, geojsonToBinary(decodedPolygonsGeometry));
+
+  t.end();
+});
+
+test('Empty MVT must return empty binary format', async t => {
+  const emptyMVTArrayBuffer = new Uint8Array();
+  const geometryBinary = await parse(emptyMVTArrayBuffer, MVTLoader, {gis: {format: 'binary'}});
+  t.ok(geometryBinary.points);
+  t.ok(geometryBinary.lines);
+  t.ok(geometryBinary.polygons);
 
   t.end();
 });

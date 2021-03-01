@@ -11,18 +11,9 @@ export {
 } from './lib/env-utils/globals';
 
 // WORKER LOADER UTILS
-export {default as createWorker} from './lib/worker-loader-utils/create-worker';
-export {validateLoaderVersion} from './lib/worker-loader-utils/validate-loader-version';
+export {createLoaderWorker} from './lib/worker-loader-utils/create-loader-worker';
+export {parseWithWorker, canParseWithWorker} from './lib/worker-loader-utils/parse-with-worker';
 export {makeTransformIterator} from './lib/iterator-utils/make-transform-iterator';
-
-// WORKER UTILS
-export {getTransferList} from './lib/worker-utils/get-transfer-list';
-export {default as _WorkerFarm} from './lib/worker-utils/worker-farm';
-export {default as _WorkerPool} from './lib/worker-utils/worker-pool';
-export {default as _WorkerThread} from './lib/worker-utils/worker-thread';
-
-// LIBRARY UTILS
-export {getLibraryUrl, loadLibrary} from './lib/library-utils/library-utils';
 
 // PARSER UTILS
 export {parseJSON} from './lib/parser-utils/parse-json';
@@ -68,12 +59,13 @@ export {forEach, concatenateChunksAsync} from './lib/iterator-utils/async-iterat
 // REQUEST UTILS
 export {default as RequestScheduler} from './lib/request-utils/request-scheduler';
 
-// PROCESS UTILS
-export {default as ChildProcessProxy} from './lib/process-utils/child-process-proxy';
-
 // MESH CATEGORY UTILS
 // Note: Should move to category specific module if code size increases
 export {getMeshSize as _getMeshSize, getMeshBoundingBox} from './categories/mesh/mesh-utils';
+
+// Loaders
+export {NullWorkerLoader, NullLoader} from './null-loader';
+export {JSONLoader} from './json-loader';
 
 // DEPRECATED IN 2.3
 export {getZeroOffsetArrayBuffer} from './lib/binary-utils/memory-copy-utils';

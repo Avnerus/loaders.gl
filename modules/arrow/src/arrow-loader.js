@@ -9,17 +9,18 @@ const VERSION = typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'latest';
 
 /** @type {WorkerLoaderObject} */
 export const ArrowWorkerLoader = {
-  id: 'arrow',
   name: 'Apache Arrow',
+  id: 'arrow',
+  module: 'arrow',
   version: VERSION,
+  worker: true,
+  category: 'table',
   extensions: ['arrow', 'feather'],
   mimeTypes: ['application/octet-stream'],
-  category: 'table',
   binary: true,
   tests: ['ARROW'],
   options: {
     arrow: {
-      workerUrl: `https://unpkg.com/@loaders.gl/arrow@${VERSION}/dist/arrow-loader.worker.js`,
       rowFormat: 'auto'
     }
   }

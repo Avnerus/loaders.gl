@@ -7,11 +7,16 @@ import parseLAS from './lib/parse-las';
 // @ts-ignore TS2304: Cannot find name '__VERSION__'.
 const VERSION = typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'latest';
 
-/** @type {WorkerLoaderObject} */
+/**
+ * Worker loader for the LAS (LASer) point cloud format
+ * @type {WorkerLoaderObject}
+ */
 export const LASWorkerLoader = {
-  id: 'las',
   name: 'LAS',
+  id: 'las',
+  module: 'las',
   version: VERSION,
+  worker: true,
   extensions: ['las', 'laz'], // LAZ is the "compressed" flavor of LAS,
   mimeTypes: ['application/octet-stream'], // TODO - text version?
   text: true,
@@ -19,7 +24,6 @@ export const LASWorkerLoader = {
   tests: ['LAS'],
   options: {
     las: {
-      workerUrl: `https://unpkg.com/@loaders.gl/las@${VERSION}/dist/las-loader.worker.js`,
       fp64: false,
       skip: 1,
       colorDepth: 8
@@ -27,7 +31,10 @@ export const LASWorkerLoader = {
   }
 };
 
-/** @type {LoaderObject} */
+/**
+ * Loader for the LAS (LASer) point cloud format
+ * @type {LoaderObject}
+ */
 export const LASLoader = {
   ...LASWorkerLoader,
   parse: async (arrayBuffer, options) => parseLAS(arrayBuffer, options),

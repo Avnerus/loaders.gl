@@ -1,0 +1,42 @@
+{
+  "name": "@loaders.gl/excel",
+  "version": "3.0.0-alpha.6",
+  "description": "Framework-independent loader for Excel files",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/visgl/loaders.gl"
+  },
+  "keywords": [
+    "webgl",
+    "loader",
+    "parser",
+    "table",
+    "Excel",
+    "Sheets",
+    "Worksheets",
+    "Spreadsheets"
+  ],
+  "types": "dist/es5/index.d.ts",
+  "main": "dist/es5/index.js",
+  "module": "dist/esm/index.js",
+  "sideEffects": false,
+  "files": [
+    "src",
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "pre-build": "npm run build-bundle && npm run build-bundle -- --env.dev && npm run build-worker",
+    "build-bundle": "webpack --display=minimal --config ../../scripts/webpack/bundle.js",
+    "build-worker": "webpack --entry ./src/workers/excel-worker.js --output ./dist/excel-worker.js --config ../../scripts/webpack/worker.js"
+  },
+  "dependencies": {
+    "@loaders.gl/loader-utils": "3.0.0-alpha.6",
+    "@loaders.gl/tables": "3.0.0-alpha.6",
+    "xlsx": "^0.16.9"
+  }
+}

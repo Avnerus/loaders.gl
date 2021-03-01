@@ -1,4 +1,4 @@
-import {loadLibrary, global} from '@loaders.gl/loader-utils';
+import {loadLibrary, global} from '@loaders.gl/worker-utils';
 
 let loadBasisPromise;
 
@@ -16,14 +16,9 @@ async function loadBasis(options) {
   let BASIS = null;
   let wasmBinary = null;
 
-  // TODO: load the module from 'textures' as soon as 'textures' npm package is published
-  // [BASIS, wasmBinary] = await Promise.all([
-  //   await loadLibrary('basis_transcoder.js', 'textures', options),
-  //   await loadLibrary('basis_transcoder.wasm', 'textures', options)
-  // ]);
   [BASIS, wasmBinary] = await Promise.all([
-    await loadLibrary('basis_transcoder.js', 'basis', options),
-    await loadLibrary('basis_transcoder.wasm', 'basis', options)
+    await loadLibrary('basis_transcoder.js', 'textures', options),
+    await loadLibrary('basis_transcoder.wasm', 'textures', options)
   ]);
 
   // Depends on how import happened...

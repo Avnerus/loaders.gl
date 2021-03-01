@@ -8,12 +8,15 @@ const VERSION = typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'latest';
 
 export const SHP_MAGIC_NUMBER = [0x00, 0x00, 0x27, 0x0a];
 
-/** @type {WorkerLoaderObject} */
+/**
+ * @type {WorkerLoaderObject} */
 export const SHPWorkerLoader = {
-  id: 'shp',
   name: 'SHP',
-  category: 'geometry',
+  id: 'shp',
+  module: 'shapefile',
   version: VERSION,
+  worker: true,
+  category: 'geometry',
   extensions: ['shp'],
   mimeTypes: ['application/octet-stream'],
   // ISSUE: This also identifies SHX files, which are identical to SHP for the first 100 bytes...
@@ -21,7 +24,6 @@ export const SHPWorkerLoader = {
   options: {
     shp: {
       _maxDimensions: 4
-      // workerUrl: `https://unpkg.com/@loaders.gl/shapefile@${VERSION}/dist/shp-loader.worker.js`
     }
   }
 };

@@ -35,4 +35,4 @@ export default function convertB3dmToI3sGeometry(
   vertexCount: number;
   attributes: any;
   featureCount: number
-}>;
+}[]>;

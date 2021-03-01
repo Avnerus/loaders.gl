@@ -1,17 +1,19 @@
-/** @typedef {import('@loaders.gl/loader-utils').LoaderObject} LoaderObject */
 /** @typedef {import('@loaders.gl/loader-utils').WorkerLoaderObject} WorkerLoaderObject */
+/** @typedef {import('@loaders.gl/loader-utils').LoaderObject} LoaderObject */
+import {VERSION} from './lib/utils/version';
 import {loadDracoDecoderModule} from './lib/draco-module-loader';
 import DracoParser from './lib/draco-parser';
 
-// __VERSION__ is injected by babel-plugin-version-inline
-// @ts-ignore TS2304: Cannot find name '__VERSION__'.
-const VERSION = typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'latest';
-
-/** @type {WorkerLoaderObject} */
+/**
+ * Worker loader for Draco3D compressed geometries
+ * @type {WorkerLoaderObject}
+ */
 export const DracoWorkerLoader = {
-  id: 'draco',
   name: 'Draco',
+  id: 'draco',
+  module: 'draco',
   version: VERSION,
+  worker: true,
   extensions: ['drc'],
   mimeTypes: ['application/octet-stream'],
   binary: true,
@@ -20,14 +22,15 @@ export const DracoWorkerLoader = {
     draco: {
       decoderType: typeof WebAssembly === 'object' ? 'wasm' : 'js', // 'js' for IE11
       libraryPath: `libs/`,
-      workerUrl: `https://unpkg.com/@loaders.gl/draco@${VERSION}/dist/draco-loader.worker.js`,
-      localWorkerUrl: `modules/draco/dist/draco-loader.worker.dev.js`,
       extraAttributes: {}
     }
   }
 };
 
-/** @type {LoaderObject} */
+/**
+ * Loader for Draco3D compressed geometries
+ * @type {LoaderObject}
+ */
 export const DracoLoader = {
   ...DracoWorkerLoader,
   parse

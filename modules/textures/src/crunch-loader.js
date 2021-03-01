@@ -1,36 +1,28 @@
 /** @typedef {import('@loaders.gl/loader-utils').LoaderObject} LoaderObject */
 /** @typedef {import('@loaders.gl/loader-utils').WorkerLoaderObject} WorkerLoaderObject */
+// Uncomment this line when latest version will be updated to '3.0.0-alpha.5'
+// import {VERSION} from './lib/utils/version';
 
-// eslint-disable-next-line import/no-unresolved
-import {parseCrunch} from './lib/parsers/parse-crunch';
-// __VERSION__ is injected by babel-plugin-version-inline
-// @ts-ignore TS2304: Cannot find name '__VERSION__'.
-const VERSION = typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'latest';
+const VERSION = '3.0.0-alpha.5';
 
 /**
- * Loader for the Crunch compressed texture container format
+ * Worker loader for the Crunch compressed texture container format
  * @type {WorkerLoaderObject}
  */
 export const CrunchWorkerLoader = {
   id: 'crunch',
   name: 'Crunch',
+  module: 'crunch',
   version: VERSION,
+  worker: true,
   extensions: ['crn'],
   mimeTypes: ['application/octet-stream'],
   binary: true,
   options: {
-    basis: {
+    crunch: {
       libraryPath: `libs/`
-      // workerUrl: `https://unpkg.com/@loaders.gl/textures@${VERSION}/dist/crunch-loader.worker.js`
     }
   }
 };
 
-/**
- * Loader for the Crunch compressed texture container format
- * @type {LoaderObject}
- */
-export const CrunchLoader = {
-  ...CrunchWorkerLoader,
-  parse: parseCrunch
-};
+// We void bundling crunch - rare format, only offer worker loader

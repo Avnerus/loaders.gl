@@ -1,7 +1,9 @@
-import {loadLibrary, global} from '@loaders.gl/loader-utils';
+/** @typedef {import('./crunch-module-loader')} types */
+import {loadLibrary, global} from '@loaders.gl/worker-utils';
 
 let CrunchModule;
 
+/** @type {types['loadCrunchModule']} */
 export async function loadCrunchModule(options) {
   const modules = options.modules || {};
   if (modules.crunch) {
@@ -23,9 +25,7 @@ async function loadCrunch(options) {
 
   let LoadCrunchDecoder = null;
 
-  // TODO: load the module from 'textures' as soon as 'textures' npm package is published
-  // [LoadCrunchDecoder] = await Promise.all([await loadLibrary('crunch.js', 'textures', options)]);
-  [LoadCrunchDecoder] = await Promise.all([await loadLibrary('crunch.js', 'basis', options)]);
+  [LoadCrunchDecoder] = await Promise.all([await loadLibrary('crunch.js', 'textures', options)]);
 
   // Depends on how import happened...
   // @ts-ignore TS2339: Property does not exist on type

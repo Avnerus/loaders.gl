@@ -1,4 +1,4 @@
-// LOADERS.GL-SPECIFIC TYPES
+// TYPES
 export {
   WorkerLoaderObject,
   LoaderObject,
@@ -12,11 +12,6 @@ export {
 } from './types';
 export {IncrementalTransform} from './lib/iterator-utils/incremental-transform';
 
-// LOADERS.GL-SPECIFIC WORKER UTILS
-export {default as createWorker} from './lib/worker-loader-utils/create-worker';
-export {validateLoaderVersion} from './lib/worker-loader-utils/validate-loader-version';
-export {makeTransformIterator} from './lib/iterator-utils/make-transform-iterator';
-
 // GENERAL UTILS
 export {default as assert} from './lib/env-utils/assert';
 export {
@@ -29,14 +24,10 @@ export {
   document
 } from './lib/env-utils/globals';
 
-// WORKER UTILS
-export {default as _WorkerFarm} from './lib/worker-utils/worker-farm';
-export {default as _WorkerPool} from './lib/worker-utils/worker-pool';
-export {default as _WorkerThread} from './lib/worker-utils/worker-thread';
-export {getTransferList} from './lib/worker-utils/get-transfer-list';
-
-// LIBRARY UTILS
-export {getLibraryUrl, loadLibrary} from './lib/library-utils/library-utils';
+// LOADERS.GL-SPECIFIC WORKER UTILS
+export {createLoaderWorker} from './lib/worker-loader-utils/create-loader-worker';
+export {parseWithWorker, canParseWithWorker} from './lib/worker-loader-utils/parse-with-worker';
+export {makeTransformIterator} from './lib/iterator-utils/make-transform-iterator';
 
 // PARSER UTILS
 export {parseJSON} from './lib/parser-utils/parse-json';
@@ -80,12 +71,12 @@ export {forEach, concatenateChunksAsync} from './lib/iterator-utils/async-iterat
 // REQUEST UTILS
 export {default as RequestScheduler} from './lib/request-utils/request-scheduler';
 
-// PROCESS UTILS
-export {default as ChildProcessProxy} from './lib/process-utils/child-process-proxy';
-
 // MESH CATEGORY UTILS
 // Note: Should move to category specific module if code size increases
 export {getMeshSize as _getMeshSize, getMeshBoundingBox} from './categories/mesh/mesh-utils';
+
+export {NullWorkerLoader, NullLoader} from './null-loader';
+export {JSONLoader} from './json-loader';
 
 // DEPRECATED IN 2.3
 export {getZeroOffsetArrayBuffer} from './lib/binary-utils/memory-copy-utils';

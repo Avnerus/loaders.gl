@@ -1,6 +1,6 @@
 {
   "name": "@loaders.gl/csv",
-  "version": "3.0.0-alpha.1",
+  "version": "3.0.0-alpha.6",
   "description": "Framework-independent loader for CSV and DSV table formats",
   "license": "MIT",
   "publishConfig": {
@@ -18,7 +18,6 @@
   ],
   "main": "dist/es5/index.js",
   "module": "dist/esm/index.js",
-  "esnext": "dist/es6/index.js",
   "sideEffects": false,
   "files": [
     "src",
@@ -27,11 +26,11 @@
   ],
   "scripts": {
     "pre-build": "npm run build-bundle && npm run build-bundle -- --env.dev",
-    "build-bundle": "webpack --display=minimal --config ../../scripts/bundle.config.js"
+    "build-bundle": "webpack --display=minimal --config ../../scripts/webpack/bundle.js"
   },
   "dependencies": {
-    "@loaders.gl/loader-utils": "3.0.0-alpha.1",
-    "@loaders.gl/tables": "3.0.0-alpha.1"
+    "@loaders.gl/loader-utils": "3.0.0-alpha.6",
+    "@loaders.gl/tables": "3.0.0-alpha.6"
   },
   "devDependencies": {
     "d3-dsv": "^1.2.0"

@@ -1,16 +1,18 @@
 /** @typedef {import('@loaders.gl/loader-utils').LoaderObject} LoaderObject */
 /** @typedef {import('@loaders.gl/loader-utils').WorkerLoaderObject} WorkerLoaderObject */
+import {VERSION} from './lib/utils/version';
 import parseBasis from './lib/parsers/parse-basis';
 
-// __VERSION__ is injected by babel-plugin-version-inline
-// @ts-ignore TS2304: Cannot find name '__VERSION__'.
-const VERSION = typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'latest';
-
-/** @type {WorkerLoaderObject} */
+/**
+ * Worker loader for Basis super compressed textures
+ * @type {WorkerLoaderObject}
+ */
 export const BasisWorkerLoader = {
-  id: 'basis',
   name: 'Basis',
+  id: 'basis',
+  module: 'textures',
   version: VERSION,
+  worker: true,
   extensions: ['basis'],
   mimeTypes: ['application/octet-stream'],
   tests: ['sB'],
@@ -18,13 +20,15 @@ export const BasisWorkerLoader = {
   options: {
     basis: {
       format: 'rgb565', // TODO: auto...
-      libraryPath: `libs/`,
-      workerUrl: `https://unpkg.com/@loaders.gl/textures@${VERSION}/dist/basis-loader.worker.js`
+      libraryPath: `libs/`
     }
   }
 };
 
-/** @type {LoaderObject} */
+/**
+ * Loader for Basis super compressed textures
+ * @type {LoaderObject}
+ */
 export const BasisLoader = {
   ...BasisWorkerLoader,
   parse: parseBasis

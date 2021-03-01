@@ -3,7 +3,6 @@ import VectorTile from './mapbox-vector-tile/vector-tile';
 
 import {geojsonToBinary} from '@loaders.gl/gis';
 import Protobuf from 'pbf';
-import {transformCoordinates, transformToLocalCoordinates} from './transform-to-local-range';
 
 /*
   * Parse MVT arrayBuffer and return GeoJSON.
@@ -12,37 +11,34 @@ import {transformCoordinates, transformToLocalCoordinates} from './transform-to-
   * @return {?Object} A GeoJSON geometry object
   */
 export default function parseMVT(arrayBuffer, options) {
-  options = options || {};
-  options.mvt = options.mvt || {};
-  options.gis = options.gis || {};
+  options = normalizeOptions(options);
 
-  if (arrayBuffer.byteLength === 0) {
-    return [];
-  }
-
-  const tile = new VectorTile(new Protobuf(arrayBuffer));
-  const loaderOptions = options.mvt;
   const features = [];
 
-  const selectedLayers = Array.isArray(loaderOptions.layers)
-    ? loaderOptions.layers
-    : Object.keys(tile.layers);
+  if (arrayBuffer.byteLength > 0) {
+    const tile = new VectorTile(new Protobuf(arrayBuffer));
+    const loaderOptions = options.mvt;
 
-  selectedLayers.forEach(layerName => {
-    const vectorTileLayer = tile.layers[layerName];
-    const featureOptions = {...loaderOptions, layerName};
+    const selectedLayers = Array.isArray(loaderOptions.layers)
+      ? loaderOptions.layers
+      : Object.keys(tile.layers);
 
-    if (!vectorTileLayer) {
-      return;
-    }
+    selectedLayers.forEach(layerName => {
+      const vectorTileLayer = tile.layers[layerName];
+      const featureOptions = {...loaderOptions, layerName};
 
-    for (let i = 0; i < vectorTileLayer.length; i++) {
-      const vectorTileFeature = vectorTileLayer.feature(i);
+      if (!vectorTileLayer) {
+        return;
+      }
 
-      const decodedFeature = getDecodedFeature(vectorTileFeature, featureOptions);
-      features.push(decodedFeature);
-    }
-  });
+      for (let i = 0; i < vectorTileLayer.length; i++) {
+        const vectorTileFeature = vectorTileLayer.feature(i);
+
+        const decodedFeature = getDecodedFeature(vectorTileFeature, featureOptions);
+        features.push(decodedFeature);
+      }
+    });
+  }
 
   if (options.gis.format === 'binary') {
     const data = geojsonToBinary(features);
@@ -52,25 +48,37 @@ export default function parseMVT(arrayBuffer, options) {
     data.byteLength = arrayBuffer.byteLength;
     return data;
   }
+
   return features;
 }
 
-function getDecodedFeature(feature, options = {}) {
+function normalizeOptions(options) {
+  options = {
+    ...options,
+    mvt: options.mvt || {},
+    gis: options.gis || {}
+  };
+
+  // Validate
   const wgs84Coordinates = options.coordinates === 'wgs84';
+  const {tileIndex} = options;
   const hasTileIndex =
-    options.tileIndex &&
-    Number.isFinite(options.tileIndex.x) &&
-    Number.isFinite(options.tileIndex.y) &&
-    Number.isFinite(options.tileIndex.z);
+    tileIndex &&
+    Number.isFinite(tileIndex.x) &&
+    Number.isFinite(tileIndex.y) &&
+    Number.isFinite(tileIndex.z);
 
   if (wgs84Coordinates && !hasTileIndex) {
     throw new Error('MVT Loader: WGS84 coordinates need tileIndex property. Check documentation.');
   }
 
-  const decodedFeature =
-    wgs84Coordinates && hasTileIndex
-      ? feature.toGeoJSON(options.tileIndex.x, options.tileIndex.y, options.tileIndex.z)
-      : transformCoordinates(feature, transformToLocalCoordinates);
+  return options;
+}
+
+function getDecodedFeature(feature, options = {}) {
+  const decodedFeature = feature.toGeoJSON(
+    options.coordinates === 'wgs84' ? options.tileIndex : transformToLocalCoordinates
+  );
 
   // Add layer name to GeoJSON properties
   if (options.layerProperty) {
@@ -78,4 +86,18 @@ function getDecodedFeature(feature, options = {}) {
   }
 
   return decodedFeature;
+}
+
+function transformToLocalCoordinates(line, feature) {
+  // This function transforms local coordinates in a
+  // [0 - bufferSize, this.extent + bufferSize] range to a
+  // [0 - (bufferSize / this.extent), 1 + (bufferSize / this.extent)] range.
+  // The resulting extent would be 1.
+  const {extent} = feature;
+
+  for (let i = 0; i < line.length; i++) {
+    const p = line[i];
+    p[0] /= extent;
+    p[1] /= extent;
+  }
 }

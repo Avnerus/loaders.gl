@@ -11,24 +11,30 @@ import parsePLYInBatches from './lib/parse-ply-in-batches';
 // @ts-ignore TS2304: Cannot find name '__VERSION__'.
 const VERSION = typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'latest';
 
-/** @type {WorkerLoaderObject} */
+/**
+ * Worker loader for PLY - Polygon File Format
+ * @type {WorkerLoaderObject}
+ */
 export const PLYWorkerLoader = {
-  id: 'ply',
   name: 'PLY',
+  id: 'ply',
+  module: 'ply',
   version: VERSION,
+  worker: true,
   extensions: ['ply'],
   mimeTypes: ['text/plain', 'application/octet-stream'],
   text: true,
   binary: true,
   tests: ['ply'],
   options: {
-    ply: {
-      workerUrl: `https://unpkg.com/@loaders.gl/ply@${VERSION}/dist/ply-loader.worker.js`
-    }
+    ply: {}
   }
 };
 
-/** @type {LoaderObject} */
+/**
+ * Loader for PLY - Polygon File Format
+ * @type {LoaderObject}
+ */
 export const PLYLoader = {
   ...PLYWorkerLoader,
   // Note: parsePLY supports both text and binary

@@ -1,10 +1,33 @@
-## Using Worker Loaders
+## Using Workers
 
-Many loaders.gl loaders can do their parsing on JavaScript worker threads. This means that the main thread will not block during parsing. Worker threads can also run in parallel, increasing your application's performance when parsing many files in parallel.
+Most loaders.gl loaders can perform parsing on JavaScript worker threads.
+This means that the main thread will not block during parsing and can continue
+to respond to user interactions or do parallel processing.
 
-Note that worker thread loading is not always the best choice, and when worker thread loading is not offered in a specific loader it is usually because it would not provide any performance benefits.
+Worker threads can also run in parallel, increasing your application's performance
+when loading parsing many files in parallel.
+
+Note that worker thread loading is not always the best choice since the transfer of
+data between workers and the main thread is only efficient if the data is predominantly
+binary.
+
+When worker thread loading is not offered in a specific loader it is usually
+because it would not provide any performance benefits.
+
+Another advantage when using pure worker loaders is that the code required to
+parse a format is not bundled into the application but loaded on demand. This is
+particularly useful when adding loaders that are only used occasionally by your
+application.
 
 More details on advantages and complications with worker thread based loading the [Worker Threads](./concepts/worker-threads.md) article in the concepts secion.
+
+## Processing Data on Workers
+
+The `processOnWorker` function in `@loaders.gl/worker-utils` is used with worker objects
+exported by modules like `@loaders.gl/compression` and `@loaders.gl/crypto` to move
+processing intensive tasks to workers.
+
+## Parsing data on Workers
 
 ## Loading Files in Parallel using Worker Loaders
 
@@ -40,9 +63,11 @@ async function loadwWithoutWorker(url1) {
 }
 ```
 
-## Concurrency Level
+## Concurrency Level and Worker Reuse
 
-Concurrency - The `options.maxConcurrency` parameter can be adjusted to define how many workers should be created for each format. Note that setting this higher than roughly the number CPU cores on your current machine will not provide much benefit and may create extra overhead.
+Concurrency - The `options.maxConcurrency` and `option.maxMobileConcurrency` options can be adjusted to define how many worker instances should be created for each format. Note that setting this higher than roughly the number CPU cores on your current machine will not provide much benefit and may create extra overhead.
+
+Worker reuse - Workers threads can occupy memoery and
 
 ## ArrayBuffer Neutering
 

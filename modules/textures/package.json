@@ -1,6 +1,6 @@
 {
   "name": "@loaders.gl/textures",
-  "version": "3.0.0-alpha.1",
+  "version": "3.0.0-alpha.6",
   "description": "Framework-independent loaders for compressed and super compressed (basis) textures ",
   "license": "MIT",
   "publishConfig": {
@@ -21,9 +21,9 @@
     "ETC",
     "basis"
   ],
+  "types": "src/index.d.ts",
   "main": "dist/es5/index.js",
   "module": "dist/esm/index.js",
-  "esnext": "dist/es6/index.js",
   "sideEffects": false,
   "files": [
     "src",
@@ -34,13 +34,18 @@
   "scripts": {
     "pre-build": "npm run copy-libs && npm run build-worker && npm run build-bundle && npm run build-bundle -- --env.dev",
     "copy-libs": "cp -rf ./src/libs ./dist/libs",
-    "build-bundle": "webpack --display=minimal --config ../../scripts/bundle.config.js",
-    "build-worker": "webpack --entry ./src/workers/basis-loader.worker.js --output ./dist/basis-loader.worker.js --config ../../scripts/worker-webpack-config.js"
+    "build-bundle": "webpack --display=minimal --config ../../scripts/webpack/bundle.js",
+    "build-worker": "npm run build-basis-worker && npm run build-npy-worker && npm run build-compressed-texture-worker && npm run build-crunch-worker",
+    "build-basis-worker": "webpack --entry ./src/workers/basis-worker.js --output ./dist/basis-worker.js --config ../../scripts/webpack/worker.js",
+    "build-npy-worker": "webpack --entry ./src/workers/npy-worker.js --output ./dist/npy-worker.js --config ../../scripts/webpack/worker.js",
+    "build-compressed-texture-worker": "webpack --entry ./src/workers/compressed-texture-worker.js --output ./dist/compressed-texture-worker.js --config ../../scripts/webpack/worker.js",
+    "build-crunch-worker": "webpack --entry ./src/workers/crunch-worker.js --output ./dist/crunch-worker.js --config ../../scripts/webpack/worker.js"
   },
   "dependencies": {
-    "@loaders.gl/core": "3.0.0-alpha.1",
-    "@loaders.gl/images": "3.0.0-alpha.1",
-    "@loaders.gl/loader-utils": "3.0.0-alpha.1",
+    "@loaders.gl/core": "3.0.0-alpha.6",
+    "@loaders.gl/images": "3.0.0-alpha.6",
+    "@loaders.gl/loader-utils": "3.0.0-alpha.6",
+    "@loaders.gl/worker-utils": "3.0.0-alpha.6",
     "ktx-parse": "^0.0.4",
     "texture-compressor": "^1.0.2"
   }
