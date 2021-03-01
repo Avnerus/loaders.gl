@@ -299,7 +299,6 @@ export default class TileHeader {
     this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
     this._inRequestVolume = this.insideViewerRequestVolume(frameState);
 
-    this._priority = this.lodMetricValue;
     this._frameNumber = frameState.frameNumber;
   }
 
