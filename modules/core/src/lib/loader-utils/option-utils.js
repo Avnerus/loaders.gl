@@ -7,7 +7,9 @@ const DEFAULT_LOADER_OPTIONS = {
   // baseUri
   fetch: null,
   CDN: 'https://unpkg.com/@loaders.gl',
-  worker: true, // By default, use worker if provided by loader
+  worker: true, // By default, use worker if provided by loader.
+  maxConcurrency: 3, // How many worker instances should be created for each loader.
+  maxMobileConcurrency: 1, // How many worker instances should be created for each loader on mobile devices.
   log: new ConsoleLog(), // A probe.gl compatible (`log.log()()` syntax) that just logs to console
   metadata: false, // TODO - currently only implemented for parseInBatches, adds initial metadata batch,
   transforms: [],
