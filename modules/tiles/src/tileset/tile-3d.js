@@ -235,8 +235,7 @@ export default class TileHeader {
         ...fetchOptions,
         [loader.id]: {
           tile: this.header,
-          // TODO: Seems like this is not needed. Should verify
-          // tileset: this.tileset.tileset,
+          tileset: this.tileset.tileset,
           isTileset: this.type === 'json',
           isTileHeader: false,
           ...this._getLoaderSpecificOptions(loader.id)
