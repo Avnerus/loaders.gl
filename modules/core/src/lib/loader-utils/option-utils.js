@@ -151,7 +151,7 @@ function validateOptionsObject(options, id, log, defaultOptions, deprecatedOptio
   for (const key in options) {
     // If top level option value is an object it could options for a loader, so ignore
     const isSubOptions = !id && isObject(options[key]);
-    if (!(key in defaultOptions)) {
+    if (!(key in defaultOptions) && !(key === 'baseUri' && !id)) {
       // Issue deprecation warnings
       if (key in deprecatedOptions) {
         log.warn(
