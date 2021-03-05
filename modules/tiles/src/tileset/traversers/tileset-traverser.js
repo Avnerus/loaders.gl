@@ -289,15 +289,12 @@ export default class TilesetTraverser {
     while (stack.length > 0) {
       const tile = stack.pop();
 
-      /* TODO: This doesn't seem needed, should check further.
-       *
       this.updateTile(tile, frameState);
 
       if (!tile.isVisibleAndInRequestVolume) {
         // Load tiles that aren't visible since they are still needed for the parent to refine
         this.loadTile(tile, frameState);
-        this.touchTile(tile, frameState);
-      }*/
+      }
 
       // Touch all tiles in empty traversal
       // TODO: Can be optimized to visible only?
