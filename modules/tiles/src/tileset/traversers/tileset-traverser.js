@@ -66,8 +66,10 @@ export default class TilesetTraverser {
     // stack to store traversed tiles, only visible tiles should be added to stack
     // visible: visible in the current view frustum
     const stack = this._traversalStack;
-
+    const depth = 1;
+    root._selectionDepth = depth;
     stack.push(root);
+
     while (stack.length > 0) {
       // 1. pop tile
       const tile = stack.pop();
@@ -76,7 +78,12 @@ export default class TilesetTraverser {
       let shouldRefine = false;
       if (this.canTraverse(tile, frameState)) {
         this.updateChildTiles(tile, frameState);
-        shouldRefine = this.updateAndPushChildren(tile, frameState, stack);
+        shouldRefine = this.updateAndPushChildren(
+          tile,
+          frameState,
+          stack,
+          tile.hasRenderContent ? tile._selectionDepth + 1 : tile._selectionDepth
+        );
       }
 
       // 3. decide if should render (select) this tile
@@ -130,7 +137,7 @@ export default class TilesetTraverser {
   }
 
   /* eslint-disable complexity, max-statements */
-  updateAndPushChildren(tile, frameState, stack) {
+  updateAndPushChildren(tile, frameState, stack, depth) {
     const {loadSiblings, skipLevelOfDetail} = this.options;
 
     const children = tile.children;
@@ -147,6 +154,7 @@ export default class TilesetTraverser {
     let refines = true;
 
     for (const child of children) {
+      child._selectionDepth = depth;
       if (child.isVisibleAndInRequestVolume) {
         if (stack.find(child)) {
           stack.delete(child);
