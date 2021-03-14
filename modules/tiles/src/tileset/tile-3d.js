@@ -164,9 +164,11 @@ export default class TileHeader {
   // are different types of values. Maybe all priorities need to be normalized to 0-1 range.
   _getPriority() {
     const traverser = this.tileset._traverser;
+    const {skipLevelOfDetail, startSkippingFromDepth} = traverser.options;
+    const skipTile = skipLevelOfDetail && this._selectionDepth >= startSkippingFromDepth;
 
     // Check if any reason to abort
-    if (!this.isVisible && traverser.options.skipLevelOfDetail) {
+    if (!this.isVisible && skipTile) {
       return -1;
     }
     if (this.contentState === TILE_CONTENT_STATE.UNLOADED) {
@@ -180,10 +182,7 @@ export default class TileHeader {
       case TILE_REFINEMENT.REPLACE:
         const parent = this.parent;
         const useParentScreenSpaceError =
-          parent &&
-          (!traverser.options.skipLevelOfDetail ||
-            this._screenSpaceError === 0.0 ||
-            parent.hasTilesetContent);
+          parent && (!skipTile || this._screenSpaceError === 0.0 || parent.hasTilesetContent);
         const screenSpaceError = useParentScreenSpaceError
           ? parent._screenSpaceError
           : this._screenSpaceError;

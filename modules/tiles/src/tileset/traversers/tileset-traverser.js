@@ -3,8 +3,9 @@ import {TILE_REFINEMENT} from '../../constants';
 
 export const DEFAULT_OPTIONS = {
   loadSiblings: false,
-  skipLevelOfDetail: false,
-  maximumScreenSpaceError: 2
+  skipLevelOfDetail: true,
+  maximumScreenSpaceError: 2,
+  startSkippingFromDepth: 0
 };
 
 export default class TilesetTraverser {
@@ -138,7 +139,7 @@ export default class TilesetTraverser {
 
   /* eslint-disable complexity, max-statements */
   updateAndPushChildren(tile, frameState, stack, depth) {
-    const {loadSiblings, skipLevelOfDetail} = this.options;
+    const {loadSiblings, skipLevelOfDetail, startSkippingFromDepth} = this.options;
 
     const children = tile.children;
 
@@ -148,7 +149,9 @@ export default class TilesetTraverser {
     // For traditional replacement refinement only refine if all children are loaded.
     // Empty tiles are exempt since it looks better if children stream in as they are loaded to fill the empty space.
     const checkRefines =
-      !skipLevelOfDetail && tile.refine === TILE_REFINEMENT.REPLACE && tile.hasRenderContent;
+      tile.refine === TILE_REFINEMENT.REPLACE &&
+      tile.hasRenderContent &&
+      (!skipLevelOfDetail && depth >= startSkippingFromDepth);
 
     let hasVisibleChild = false;
     let refines = true;
@@ -180,7 +183,7 @@ export default class TilesetTraverser {
 
         refines = refines && childRefines;
 
-        if (!refines && !skipLevelOfDetail) {
+        if (!refines) {
           return false;
         }
       }
@@ -253,7 +256,13 @@ export default class TilesetTraverser {
   shouldSelectTile(tile, frameState) {
     // if select tile is in current frame
     // and content available
-    return tile.contentAvailable && !this.options.skipLevelOfDetail;
+    return (
+      tile.contentAvailable &&
+      !(
+        this.options.skipLevelOfDetail &&
+        tile._selectionDepth >= this.options.startSkippingFromDepth - 1
+      )
+    );
   }
 
   // Decide if tile LoD (level of detail) is not sufficient under current viewport

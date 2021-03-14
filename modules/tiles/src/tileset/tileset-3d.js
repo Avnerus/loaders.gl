@@ -85,7 +85,7 @@ const DEFAULT_OPTIONS = {
   modelMatrix: new Matrix4(),
 
   // Set to true to enable experimental request throttling, for improved performance
-  throttleRequests: false,
+  throttleRequests: true,
 
   maximumMemoryUsage: 32,
 
