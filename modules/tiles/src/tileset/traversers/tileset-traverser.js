@@ -3,7 +3,7 @@ import {TILE_REFINEMENT} from '../../constants';
 
 export const DEFAULT_OPTIONS = {
   loadSiblings: false,
-  skipLevelOfDetail: true,
+  skipLevelOfDetail: false,
   maximumScreenSpaceError: 2,
   startSkippingFromDepth: 0
 };
@@ -151,7 +151,7 @@ export default class TilesetTraverser {
     const checkRefines =
       tile.refine === TILE_REFINEMENT.REPLACE &&
       tile.hasRenderContent &&
-      (!skipLevelOfDetail && depth >= startSkippingFromDepth);
+      !(skipLevelOfDetail && depth >= startSkippingFromDepth);
 
     let hasVisibleChild = false;
     let refines = true;
