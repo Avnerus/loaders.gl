@@ -281,13 +281,15 @@ export default class TileHeader {
     }
 
     const parent = this.parent;
-    // const parentTransform = parent ? parent.computedTransform : this.tileset.modelMatrix;
     const parentVisibilityPlaneMask = parent
       ? parent._visibilityPlaneMask
       : CullingVolume.MASK_INDETERMINATE;
 
-    // TODO: When is this needed? Ask Cesium?
-    // this._updateTransform(parentTransform);
+    if (this.tileset._traverser.options.updateTransforms) {
+      const parentTransform = parent ? parent.computedTransform : this.tileset.modelMatrix;
+      this._updateTransform(parentTransform);
+    }
+
     this._distanceToCamera = this.distanceToTile(frameState);
     this._screenSpaceError = this.getScreenSpaceError(frameState, false);
     this._visibilityPlaneMask = this.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test

@@ -4,6 +4,7 @@ import {TILE_REFINEMENT} from '../../constants';
 export const DEFAULT_OPTIONS = {
   loadSiblings: false,
   skipLevelOfDetail: false,
+  updateTransforms: true,
   maximumScreenSpaceError: 2,
   startSkippingFromDepth: 0
 };
