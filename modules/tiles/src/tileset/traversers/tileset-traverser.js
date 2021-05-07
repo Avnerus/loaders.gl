@@ -189,9 +189,12 @@ export default class TilesetTraverser {
       }
     }
 
+    /*
+    TODO: Why is this needed? seems to cause issues with tiles not refining
     if (!hasVisibleChild) {
       refines = false;
     }
+    */
 
     return refines;
   }
@@ -303,7 +306,7 @@ export default class TilesetTraverser {
 
     stack.push(root);
 
-    while (stack.length > 0) {
+    while (stack.length > 0 && allDescendantsLoaded) {
       const tile = stack.pop();
 
       this.updateTile(tile, frameState);
@@ -318,13 +321,7 @@ export default class TilesetTraverser {
       this.touchTile(tile, frameState);
 
       // Only traverse if the tile is empty - traversal stop at descendants with content
-      const traverse = !tile.hasRenderContent && this.canTraverse(tile, frameState, false, true);
-
-      // Traversal stops but the tile does not have content yet.
-      // There will be holes if the parent tries to refine to its children, so don't refine.
-      if (!traverse && !tile.contentAvailable && tile.hasRenderContent) {
-        allDescendantsLoaded = false;
-      }
+      const traverse = !tile.hasRenderContent && this.canTraverse(tile, frameState, false, true); 
 
       if (traverse) {
         const children = tile.children;
@@ -335,6 +332,8 @@ export default class TilesetTraverser {
           }
           stack.push(child);
         }
+      } else if (!tile.contentAvailable) {
+        allDescendantsLoaded = false;        
       }
     }
 
