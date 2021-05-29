@@ -32,6 +32,7 @@ function printHelp() {
   );
   console.log('--token [Token for Cesium ION tilesets authentication]');
   console.log('--no-draco [Disable draco compression for geometry]');
+  console.log('--validate [Enable validation]');
   process.exit(0); // eslint-disable-line
 }
 
@@ -112,7 +113,8 @@ async function convert(options) {
         sevenZipExe: options.sevenZipExe,
         egmFilePath: options.egm,
         token: options.token,
-        draco: options.draco
+        draco: options.draco,
+        validate: options.validate
       });
       break;
     default:
@@ -132,7 +134,8 @@ function parseOptions(args) {
     egm: join(process.cwd(), 'deps', 'egm2008-5.pgm'),
     token: null,
     draco: true,
-    installDependencies: false
+    installDependencies: false,
+    validate: false
   };
 
   const count = args.length;
@@ -180,6 +183,9 @@ function parseOptions(args) {
           break;
         case '--no-draco':
           opts.draco = false;
+          break;
+        case '--validate':
+          opts.validate = true;
           break;
         case '--install-dependencies':
           opts.installDependencies = true;

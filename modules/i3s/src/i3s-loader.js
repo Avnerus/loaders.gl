@@ -1,9 +1,8 @@
 /* global TextDecoder */
 /** @typedef {import('@loaders.gl/loader-utils').LoaderObject} LoaderObject */
-import {load} from '@loaders.gl/core';
+import {load, parse} from '@loaders.gl/core';
+import {I3SContentLoader} from './i3s-content-loader';
 import {normalizeTileData, normalizeTilesetData} from './lib/parsers/parse-i3s';
-import {parseI3STileContent} from './lib/parsers/parse-i3s-tile-content';
-import {I3SAttributeLoader} from './i3s-attribute-loader';
 
 // __VERSION__ is injected by babel-plugin-version-inline
 // @ts-ignore TS2304: Cannot find name '__VERSION__'.
@@ -22,7 +21,7 @@ export const I3SLoader = {
   module: 'i3s',
   version: VERSION,
   mimeTypes: ['application/octet-stream'],
-  parse,
+  parse: parseI3S,
   extensions: ['bin'],
   options: {
     i3s: {
@@ -32,13 +31,12 @@ export const I3SLoader = {
       tile: null,
       tileset: null,
       useDracoGeometry: true,
-      useCompressedTextures: true,
-      loadFeatureAttributes: true
+      useCompressedTextures: true
     }
   }
 };
 
-async function parse(data, options, context, loader) {
+async function parseI3S(data, options, context, loader) {
   const url = context.url;
   options.i3s = options.i3s || {};
 
@@ -73,16 +71,7 @@ async function parse(data, options, context, loader) {
 }
 
 async function parseTileContent(arrayBuffer, options, context) {
-  const {tile, tileset, loadFeatureAttributes} = options.i3s;
-  tile.content = tile.content || {};
-  tile.userData = tile.userData || {};
-  await parseI3STileContent(arrayBuffer, tile, tileset, options);
-
-  if (loadFeatureAttributes) {
-    await parseFeatureAttributes(tile, tileset);
-  }
-
-  return tile.content;
+  return await parse(arrayBuffer, I3SContentLoader, options);
 }
 
 async function parseTileset(data, options, context) {
@@ -97,34 +86,4 @@ async function parseTileset(data, options, context) {
 async function parseTile(data, options, context) {
   data = JSON.parse(new TextDecoder().decode(data));
   return normalizeTileData(data, options, context);
-}
-
-async function parseFeatureAttributes(tile, tileset) {
-  const attributeStorageInfo = tileset.attributeStorageInfo;
-  const attributeUrls = tile.attributeUrls;
-  const attributes = [];
-
-  for (let index = 0; index < attributeStorageInfo.length; index++) {
-    const url = attributeUrls[index];
-    const attributeName = attributeStorageInfo[index].name;
-    const attributeType = getAttributeValueType(attributeStorageInfo[index]);
-
-    try {
-      const attribute = await load(url, I3SAttributeLoader, {attributeName, attributeType});
-      attributes.push(attribute);
-    } catch (error) {
-      // do nothing
-    }
-  }
-
-  tile.userData.layerFeaturesAttributes = attributes;
-}
-
-function getAttributeValueType(attribute) {
-  if (attribute.hasOwnProperty('objectIds')) {
-    return 'Oid32';
-  } else if (attribute.hasOwnProperty('attributeValues')) {
-    return attribute.attributeValues.valueType;
-  }
-  return null;
 }

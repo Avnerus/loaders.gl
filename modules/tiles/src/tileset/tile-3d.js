@@ -22,8 +22,18 @@ function defined(x) {
 // the content is loaded on-demand when needed based on the view.
 // Do not construct this directly, instead access tiles through {@link Tileset3D#tileVisible}.
 export default class TileHeader {
+  /**
+   * @constructs
+   * Create a TileHeader instance
+   * @param {Tileset3D} tileset - Tileset3D instance
+   * @param {Object} header - tile header - JSON loaded from a dataset
+   * @param {TileHeader} parentHeader - parent TileHeader instance
+   * @param {string} basePath - base path / url of the tile
+   * @param {string} extendedId - optional ID to separate copies of a tile for different viewports.
+   *                              const extendedId = `${tile.id}-${frameState.viewport.id}`;
+   */
   // eslint-disable-next-line max-statements
-  constructor(tileset, header, parentHeader) {
+  constructor(tileset, header, parentHeader, basePath, extendedId) {
     assert(typeof header === 'object');
 
     // PUBLIC MEMBERS
@@ -31,7 +41,7 @@ export default class TileHeader {
     this.header = header;
     // The tileset containing this tile.
     this.tileset = tileset;
-    this.id = header.id;
+    this.id = extendedId || header.id;
     this.url = header.url;
     // This tile's parent or `undefined` if this tile is the root.
     this.parent = parentHeader;
@@ -52,7 +62,7 @@ export default class TileHeader {
     this.children = [];
 
     this.depth = 0;
-    this.userData = {};
+    this.viewportIds = [];
 
     // PRIVATE MEMBERS
     this._cacheNode = null;
@@ -73,6 +83,9 @@ export default class TileHeader {
     this._expiredContent = null;
 
     this._getPriority = this._getPriority.bind(this);
+
+    // Container to store application specific data
+    this.userData = {};
 
     Object.seal(this);
   }
@@ -228,10 +241,9 @@ export default class TileHeader {
     try {
       const contentUrl = this.tileset.getTileUrl(this.contentUrl);
       // The content can be a binary tile ot a JSON tileset
-      const fetchOptions = this.tileset.fetchOptions;
       const loader = this.tileset.loader;
       const options = {
-        ...fetchOptions,
+        fetch: this.tileset.fetchOptions,
         [loader.id]: {
           isTileset: this.type === 'json',
           ...this._getLoaderSpecificOptions(loader.id)
@@ -272,8 +284,13 @@ export default class TileHeader {
     return true;
   }
 
-  // Update the tile's visibility.
-  updateVisibility(frameState) {
+  /**
+   * Update the tile's visibility
+   * @param {Object} frameState - frame state for tile culling
+   * @param {string[]} viewportIds - a list of viewport ids that show this tile
+   * @return {void}
+   */
+  updateVisibility(frameState, viewportIds) {
     if (this._frameNumber === frameState.frameNumber) {
       // Return early if visibility has already been checked during the traversal.
       // The visibility may have already been checked if the cullWithChildrenBounds optimization is used.
@@ -297,6 +314,7 @@ export default class TileHeader {
     this._inRequestVolume = this.insideViewerRequestVolume(frameState);
 
     this._frameNumber = frameState.frameNumber;
+    this.viewportIds = viewportIds;
   }
 
   // Determines whether the tile's bounding volume intersects the culling volume.
@@ -391,7 +409,10 @@ export default class TileHeader {
    */
   insideViewerRequestVolume(frameState) {
     const viewerRequestVolume = this._viewerRequestVolume;
-    return !viewerRequestVolume || viewerRequestVolume.distanceToCamera(frameState) === 0.0;
+    return (
+      !viewerRequestVolume ||
+      viewerRequestVolume.distanceToCamera(frameState.camera.position) === 0.0
+    );
   }
 
   _initializeLodMetric(header) {
@@ -459,7 +480,7 @@ export default class TileHeader {
 
   // TODO - remove anything not related to basic visibility detection
   _initializeRenderingState(header) {
-    this.depth = header.level;
+    this.depth = header.level || (this.parent ? this.parent.depth + 1 : 0);
     this._shouldRefine = false;
 
     // Members this are updated every frame for tree traversal and rendering optimizations:

@@ -26,8 +26,11 @@ const FORMAT_LOADER_MAP = {
   dds: CompressedTextureLoader
 };
 
+const I3S_ATTRIBUTE_TYPE = 'i3s-attribute-type';
+
 export async function parseI3STileContent(arrayBuffer, tile, tileset, options) {
   tile.content = tile.content || {};
+  tile.content.segmentationData = tile.content.segmentationData || null;
 
   // construct featureData from defaultGeometrySchema;
   tile.content.featureData = constructFeatureDataStruct(tile, tileset);
@@ -49,6 +52,9 @@ export async function parseI3STileContent(arrayBuffer, tile, tileset, options) {
   }
 
   tile.content.material = makePbrMaterial(tile.materialDefinition, tile.content.texture);
+  if (tile.content.material) {
+    tile.content.texture = null;
+  }
 
   return await parseI3SNodeGeometry(arrayBuffer, tile, options);
 }
@@ -64,8 +70,14 @@ async function parseI3SNodeGeometry(arrayBuffer, tile = {}, options) {
   let vertexCount;
   let byteOffset = 0;
   let featureCount = 0;
+
   if (tile.isDracoGeometry) {
-    const decompressedGeometry = await parse(arrayBuffer, DracoLoader);
+    const decompressedGeometry = await parse(arrayBuffer, DracoLoader, {
+      parseOptions: {
+        attributeNameEntry: I3S_ATTRIBUTE_TYPE
+      }
+    });
+
     vertexCount = decompressedGeometry.header.vertexCount;
     const indices = decompressedGeometry.indices.value;
     const {
@@ -73,15 +85,25 @@ async function parseI3SNodeGeometry(arrayBuffer, tile = {}, options) {
       NORMAL,
       COLOR_0,
       TEXCOORD_0,
-      CUSTOM_ATTRIBUTE_3
+      ['feature-index']: featureIndex,
+      ['uv-region']: uvRegion
     } = decompressedGeometry.attributes;
+
     attributes = {
-      position: flattenAttribute(POSITION, indices),
-      normal: flattenAttribute(NORMAL, indices),
-      color: flattenAttribute(COLOR_0, indices),
-      uv0: flattenAttribute(TEXCOORD_0, indices),
-      id: flattenAttribute(CUSTOM_ATTRIBUTE_3, indices)
+      position: POSITION,
+      normal: NORMAL,
+      color: COLOR_0,
+      uv0: TEXCOORD_0,
+      uvRegion,
+      id: featureIndex,
+      indices
     };
+
+    const featureIds = getFeatureIdsFromFeatureIndexMetadata(featureIndex);
+
+    if (featureIds) {
+      flattenFeatureIdsByFeatureIndices(attributes, featureIds);
+    }
   } else {
     const {
       vertexAttributes,
@@ -112,13 +134,7 @@ async function parseI3SNodeGeometry(arrayBuffer, tile = {}, options) {
       featureAttributeOrder
     );
 
-    // TODO parse Uint64 attributes properly.
-    // They are not the same as in compressed attributes.
-    // Also featureIds needs to be flatten by face range.
-    // Lets set them as new Float32Array(0) for now to avoid error in non compressed attributes.
-    normalizedFeatureAttributes.id.value = new Float32Array(
-      normalizedVertexAttributes.position.value.length
-    );
+    flattenFeatureIdsByFaceRanges(normalizedFeatureAttributes);
     attributes = concatAttributes(normalizedVertexAttributes, normalizedFeatureAttributes);
   }
 
@@ -132,11 +148,15 @@ async function parseI3SNodeGeometry(arrayBuffer, tile = {}, options) {
   content.attributes = {
     positions: attributes.position,
     normals: attributes.normal,
-    colors: attributes.color,
+    colors: normalizeAttribute(attributes.color), // Normalize from UInt8
     texCoords: attributes.uv0,
-    featureIds: attributes.id,
-    faceRange: attributes.faceRange
+    uvRegions: normalizeAttribute(attributes.uvRegion) // Normalize from UInt16
   };
+  content.indices = attributes.indices || null;
+
+  if (attributes.id && attributes.id.value) {
+    tile.content.segmentationData = attributes.id.value;
+  }
 
   // Remove undefined attributes
   for (const attributeIndex in content.attributes) {
@@ -153,6 +173,7 @@ async function parseI3SNodeGeometry(arrayBuffer, tile = {}, options) {
 
   return tile;
 }
+
 /**
  * Do concatenation of attribute objects.
  * Done as separate fucntion to avoid ts errors.
@@ -164,24 +185,17 @@ function concatAttributes(normalizedVertexAttributes, normalizedFeatureAttribute
   return {...normalizedVertexAttributes, ...normalizedFeatureAttributes};
 }
 
-function flattenAttribute(attribute, indices) {
+/**
+ * Normalize attribute to range [0..1] . Eg. convert colors buffer from [255,255,255,255] to [1,1,1,1]
+ * @param {Object} attribute - geometry attribute
+ * @returns {Object} - geometry attribute in right format
+ */
+function normalizeAttribute(attribute) {
   if (!attribute) {
-    return null;
+    return attribute;
   }
-  const TypedArrayConstructor = attribute.value.constructor;
-  const result = new TypedArrayConstructor(indices.length * attribute.size);
-  for (let i = 0; i < indices.length; i++) {
-    const vertexIndex = indices[i] * attribute.size;
-    result.set(
-      new TypedArrayConstructor(
-        attribute.value.buffer,
-        vertexIndex * attribute.value.BYTES_PER_ELEMENT,
-        attribute.size
-      ),
-      i * attribute.size
-    );
-  }
-  return {...attribute, value: result};
+  attribute.normalized = true;
+  return attribute;
 }
 
 function constructFeatureDataStruct(tile, tileset) {
@@ -344,15 +358,24 @@ function offsetsToCartesians(vertices, metadata = {}, cartographicOrigin) {
  * @returns {object}
  */
 function makePbrMaterial(materialDefinition, texture) {
-  if (!materialDefinition) {
-    return null;
+  let pbrMaterial;
+  if (materialDefinition) {
+    pbrMaterial = {
+      ...materialDefinition,
+      pbrMetallicRoughness: materialDefinition.pbrMetallicRoughness
+        ? {...materialDefinition.pbrMetallicRoughness}
+        : {baseColorFactor: [255, 255, 255, 255]}
+    };
+  } else {
+    pbrMaterial = {
+      pbrMetallicRoughness: {}
+    };
+    if (texture) {
+      pbrMaterial.pbrMetallicRoughness.baseColorTexture = {texCoord: 0};
+    } else {
+      pbrMaterial.pbrMetallicRoughness.baseColorFactor = [255, 255, 255, 255];
+    }
   }
-  const pbrMaterial = {
-    ...materialDefinition,
-    pbrMetallicRoughness: materialDefinition.pbrMetallicRoughness
-      ? {...materialDefinition.pbrMetallicRoughness}
-      : {baseColorFactor: [255, 255, 255, 255]}
-  };
 
   // Set default 0.25 per spec https://github.com/Esri/i3s-spec/blob/master/docs/1.7/materialDefinitions.cmn.md
   pbrMaterial.alphaCutoff = pbrMaterial.alphaCutoff || 0.25;
@@ -420,4 +443,71 @@ function setMaterialTexture(material, image) {
   } else if (material.occlusionTexture) {
     material.occlusionTexture = {...material.occlusionTexture, texture};
   }
+}
+
+/**
+ * Flatten feature ids using face ranges
+ * @param {object} normalizedFeatureAttributes
+ * @returns {void}
+ */
+function flattenFeatureIdsByFaceRanges(normalizedFeatureAttributes) {
+  const {id, faceRange} = normalizedFeatureAttributes;
+
+  if (!id || !faceRange) {
+    return;
+  }
+
+  const featureIds = id.value;
+  const range = faceRange.value;
+  const featureIdsLength = range[range.length - 1] + 1;
+  const orderedFeatureIndices = new Uint32Array(featureIdsLength * 3);
+
+  let featureIndex = 0;
+  let startIndex = 0;
+
+  for (let index = 1; index < range.length; index += 2) {
+    const fillId = Number(featureIds[featureIndex]);
+    const endValue = range[index];
+    const prevValue = range[index - 1];
+    const trianglesCount = endValue - prevValue + 1;
+    const endIndex = startIndex + trianglesCount * 3;
+
+    orderedFeatureIndices.fill(fillId, startIndex, endIndex);
+
+    featureIndex++;
+    startIndex = endIndex;
+  }
+
+  normalizedFeatureAttributes.id.value = orderedFeatureIndices;
+}
+
+/**
+ * Flatten feature ids using featureIndices
+ * @param {object} attributes
+ * @param {any} objectIds
+ * @returns {void}
+ */
+function flattenFeatureIdsByFeatureIndices(attributes, objectIds) {
+  const featureIndices = attributes.id.value;
+  const featureIds = new Float32Array(featureIndices.length);
+
+  for (let index = 0; index < featureIndices.length; index++) {
+    featureIds[index] = objectIds[featureIndices[index]];
+  }
+
+  attributes.id.value = featureIds;
+}
+
+/**
+ * Flatten feature ids using featureIndices
+ * @param {object} featureIndex
+ * @returns {Int32Array}
+ */
+function getFeatureIdsFromFeatureIndexMetadata(featureIndex) {
+  return (
+    featureIndex &&
+    featureIndex.metadata &&
+    featureIndex.metadata['i3s-feature-ids'] &&
+    featureIndex.metadata['i3s-feature-ids'].intArray
+  );
 }

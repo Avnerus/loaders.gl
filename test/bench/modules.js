@@ -28,15 +28,17 @@ import imageBench from '@loaders.gl/images/test/images.bench';
 import coreBench from '@loaders.gl/core/test/core.bench';
 import csvBench from '@loaders.gl/csv/test/csv.bench';
 import jsonBench from '@loaders.gl/json/test/json-loader.bench';
+import mvtBench from '@loaders.gl/mvt/test/mvt-loader.bench';
 import excelBench from '@loaders.gl/excel/test/excel.bench';
 import dracoBench from '@loaders.gl/draco/test/draco.bench';
-
 import cryptoBench from '@loaders.gl/crypto/test/crypto.bench';
+import i3sLoaderBench from '@loaders.gl/i3s/test/i3s-loader.bench';
 
 _addAliases(ALIASES);
 
 export async function addModuleBenchmarksToSuite(suite) {
   // add tests
+  await mvtBench(suite);
   await loaderUtilsBench(suite);
 
   await imageBench(suite);
@@ -48,4 +50,5 @@ export async function addModuleBenchmarksToSuite(suite) {
   await excelBench(suite);
 
   await coreBench(suite);
+  await i3sLoaderBench(suite);
 }

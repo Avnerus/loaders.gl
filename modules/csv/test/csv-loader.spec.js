@@ -8,6 +8,8 @@ import {CSVLoader} from '@loaders.gl/csv';
 // Small CSV Sample Files
 const CSV_SAMPLE_URL = '@loaders.gl/csv/test/data/sample.csv';
 const CSV_SAMPLE_VERY_LONG_URL = '@loaders.gl/csv/test/data/sample-very-long.csv';
+const CSV_SAMPLE_URL_DUPLICATE_COLS = '@loaders.gl/csv/test/data/sample-duplicate-cols.csv';
+const CSV_SAMPLE_URL_EMPTY_LINES = '@loaders.gl/csv/test/data/sample-empty-line.csv';
 const CSV_STATES_URL = '@loaders.gl/csv/test/data/states.csv';
 
 const CSV_NO_HEADER_URL = '@loaders.gl/csv/test/data/numbers-100-no-header.csv';
@@ -48,16 +50,20 @@ test('CSVLoader#load(states.csv)', async t => {
 test('CSVLoader#load', async t => {
   const rows = await load(CSV_SAMPLE_URL, CSVLoader);
   t.is(rows.length, 2, 'Got correct table size, correctly inferred no header');
-  t.deepEqual(rows[0], ['A', 'B', 1], 'Got correct first row');
+  t.deepEqual(rows[0], {column1: 'A', column2: 'B', column3: 1}, 'Got correct first row');
 
   const rows1 = await load(CSV_SAMPLE_URL, CSVLoader, {csv: {header: true}});
   t.is(rows1.length, 1, 'Got correct table size, forced first row as header');
   t.deepEqual(rows1[0], {A: 'X', B: 'Y', 1: 2}, 'Got correct first row');
 
-  const rows2 = await load(CSV_SAMPLE_VERY_LONG_URL, CSVLoader);
-  t.is(rows2.length, 2000, 'Got correct table size');
+  const rows2 = await load(CSV_SAMPLE_URL, CSVLoader, {csv: {rowFormat: 'array'}});
+  t.is(rows2.length, 2, 'Got correct table size');
+  t.deepEqual(rows2, [['A', 'B', 1], ['X', 'Y', 2]], 'Got correct array content');
+
+  const rows3 = await load(CSV_SAMPLE_VERY_LONG_URL, CSVLoader);
+  t.is(rows3.length, 2000, 'Got correct table size');
   t.deepEqual(
-    rows2[0],
+    rows3[0],
     {
       TLD: 'ABC',
       'meaning of life': 42,
@@ -67,6 +73,33 @@ test('CSVLoader#load', async t => {
   );
 
   t.end();
+});
+
+test('CSVLoader#load(sample.csv, duplicate column names)', async t => {
+  const rows = await load(CSV_SAMPLE_URL_DUPLICATE_COLS, CSVLoader);
+  t.is(rows.length, 3, 'Got correct table size');
+  t.deepEqual(
+    rows,
+    [
+      {A: 'x', B: 1, 'A.1': 'y', 'A.1.1': 'z', 'A.2': 'w', 'B.1': 2},
+      {A: 'y', B: 29, 'A.1': 'z', 'A.1.1': 'y', 'A.2': 'w', 'B.1': 19},
+      {A: 'x', B: 1, 'A.1': 'y', 'A.1.1': 'z', 'A.2': 'w', 'B.1': 2}
+    ],
+    'dataset should be parsed with the corrected duplicate headers'
+  );
+
+  const rows2 = await load(CSV_SAMPLE_URL_DUPLICATE_COLS, CSVLoader, {csv: {rowFormat: 'array'}});
+  t.is(rows2.length, 4, 'Got correct table size');
+  t.deepEqual(
+    rows2,
+    [
+      ['A', 'B', 'A', 'A.1', 'A', 'B'],
+      ['x', 1, 'y', 'z', 'w', 2],
+      ['y', 29, 'z', 'y', 'w', 19],
+      ['x', 1, 'y', 'z', 'w', 2]
+    ],
+    'dataset should be parsed correctly in the array rowFormat'
+  );
 });
 
 test('CSVLoader#loadInBatches(sample.csv, columns)', async t => {
@@ -135,7 +168,7 @@ test('CSVLoader#loadInBatches(sample.csv, rows)', async t => {
   for await (const batch of iterator) {
     t.comment(`BATCH ${batch.count}: ${batch.length} ${JSON.stringify(batch.data).slice(0, 200)}`);
     t.equal(batch.length, 2, 'Got correct batch size');
-    t.deepEqual(batch.data[0], ['A', 'B', 1], 'Got correct first row');
+    t.deepEqual(batch.data[0], {column1: 'A', column2: 'B', column3: 1}, 'Got correct first row');
     batchCount++;
   }
   t.equal(batchCount, 1, 'Correct number of batches received');
@@ -151,7 +184,7 @@ test('CSVLoader#loadInBatches(sample.csv, header)', async t => {
   for await (const batch of iterator) {
     t.comment(`BATCH ${batch.count}: ${batch.length} ${JSON.stringify(batch.data).slice(0, 200)}`);
     t.equal(batch.length, 2, 'Got correct batch size');
-    t.deepEqual(batch.data[0], ['A', 'B', 1], 'Got correct first row');
+    t.deepEqual(batch.data[0], {column1: 'A', column2: 'B', column3: 1}, 'Got correct first row');
     batchCount++;
   }
   t.equal(batchCount, 1, 'Correct number of batches received');
@@ -160,7 +193,7 @@ test('CSVLoader#loadInBatches(sample.csv, header)', async t => {
 });
 
 test('CSVLoader#loadInBatches(sample.csv, rows)', async t => {
-  const iterator = await loadInBatches(CSV_SAMPLE_URL, CSVLoader);
+  const iterator = await loadInBatches(CSV_SAMPLE_URL, CSVLoader, {csv: {rowFormat: 'array'}});
   t.ok(isIterator(iterator) || isAsyncIterable(iterator), 'loadInBatches returned iterator');
 
   let batchCount = 0;
@@ -222,5 +255,67 @@ test('CSVLoader#loadInBatches(sample.csv, no dynamicTyping)', async t => {
     rowCount = rowCount + batch.length;
   }
   t.equal(rowCount, 2, 'Correct number of rows received');
+  t.end();
+});
+
+test('CSVLoader#loadInBatches(sample.csv, duplicate columns)', async t => {
+  // rowFormat: 'object'
+  const iterator = await loadInBatches(CSV_SAMPLE_URL_DUPLICATE_COLS, CSVLoader, {
+    csv: {rowFormat: 'object'}
+  });
+
+  const rows = [];
+
+  for await (const batch of iterator) {
+    rows.push(...batch.data);
+  }
+
+  t.is(rows.length, 3, 'Got correct table size');
+  t.deepEqual(
+    rows,
+    [
+      {A: 'x', B: 1, 'A.1': 'y', 'A.1.1': 'z', 'A.2': 'w', 'B.1': 2},
+      {A: 'y', B: 29, 'A.1': 'z', 'A.1.1': 'y', 'A.2': 'w', 'B.1': 19},
+      {A: 'x', B: 1, 'A.1': 'y', 'A.1.1': 'z', 'A.2': 'w', 'B.1': 2}
+    ],
+    'dataset should be parsed with the corrected duplicate headers'
+  );
+
+  // rowFormat: 'array'
+  const iterator2 = await loadInBatches(CSV_SAMPLE_URL_DUPLICATE_COLS, CSVLoader, {
+    csv: {rowFormat: 'array'}
+  });
+
+  const rows2 = [];
+
+  for await (const batch of iterator2) {
+    rows2.push(...batch.data);
+  }
+
+  t.is(rows2.length, 3, 'Got correct table size');
+  t.deepEqual(
+    rows2,
+    [['x', 1, 'y', 'z', 'w', 2], ['y', 29, 'z', 'y', 'w', 19], ['x', 1, 'y', 'z', 'w', 2]],
+    'dataset should be parsed correctly in the array rowFormat'
+  );
+});
+
+test('CSVLoader#loadInBatches(skipEmptyLines)', async t => {
+  const iterator = await loadInBatches(CSV_SAMPLE_URL_EMPTY_LINES, CSVLoader, {
+    csv: {rowFormat: 'object', skipEmptyLines: true}
+  });
+
+  const rows = [];
+
+  for await (const batch of iterator) {
+    rows.push(...batch.data);
+  }
+
+  t.is(rows.length, 2, 'Got correct table size');
+  t.deepEqual(
+    rows,
+    [{A: 'x', B: 1, C: 'some text'}, {A: 'y', B: 2, C: 'other text'}],
+    'dataset should be parsed with the correct content'
+  );
   t.end();
 });

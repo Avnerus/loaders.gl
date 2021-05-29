@@ -1,13 +1,12 @@
 import {load} from '@loaders.gl/core';
 import {normalizeTileNonUrlData} from '../lib/parsers/parse-i3s';
-import {convertI3SObbToMbs} from '../utils/convert-i3s-obb-to-mbs';
 import {I3SNodePageLoader} from '../i3s-node-page-loader';
 import {generateTilesetAttributeUrls} from '../lib/parsers/url-utils';
 import {getSupportedGPUTextureFormats} from '@loaders.gl/textures';
-
+import {getUrlWithToken} from '../lib/parsers/url-utils';
 export default class I3SNodePagesTiles {
   constructor(tileset, options = {}) {
-    this.tileset = tileset;
+    this.tileset = {...tileset}; // spread the tileset to avoid circular reference
     this.nodesPerPage = tileset.nodePages.nodesPerPage;
     this.lodSelectionMetricType = tileset.nodePages.lodSelectionMetricType;
     this.options = options;
@@ -20,7 +19,10 @@ export default class I3SNodePagesTiles {
   async getNodeById(id) {
     const pageIndex = Math.floor(id / this.nodesPerPage);
     if (!this.nodePages[pageIndex]) {
-      const nodePageUrl = `${this.tileset.url}/nodepages/${pageIndex}`;
+      const nodePageUrl = getUrlWithToken(
+        `${this.tileset.url}/nodepages/${pageIndex}`,
+        this.options.token
+      );
       this.nodePages[pageIndex] = load(nodePageUrl, I3SNodePageLoader, this.options);
       this.nodePages[pageIndex] = await this.nodePages[pageIndex];
     }
@@ -31,6 +33,7 @@ export default class I3SNodePagesTiles {
     return this.nodePages[pageIndex].nodes[nodeIndex];
   }
 
+  // eslint-disable-next-line complexity
   async formTileFromNodePages(id) {
     const node = await this.getNodeById(id);
     const children = [];
@@ -38,8 +41,7 @@ export default class I3SNodePagesTiles {
       const childNode = await this.getNodeById(child);
       children.push({
         id: child,
-        obb: childNode.obb,
-        mbs: convertI3SObbToMbs(childNode.obb)
+        obb: childNode.obb
       });
     }
 
@@ -69,7 +71,7 @@ export default class I3SNodePagesTiles {
       }
 
       if (this.tileset.attributeStorageInfo) {
-        attributeUrls = generateTilesetAttributeUrls(this.tileset, node.mesh.material.resource);
+        attributeUrls = generateTilesetAttributeUrls(this.tileset, node.mesh.attribute.resource);
       }
     }
 
@@ -79,7 +81,6 @@ export default class I3SNodePagesTiles {
       id,
       lodSelection,
       obb: node.obb,
-      mbs: convertI3SObbToMbs(node.obb),
       contentUrl,
       textureUrl,
       attributeUrls,

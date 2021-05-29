@@ -1,11 +1,9 @@
-import {Vector3} from '@math.gl/core';
+import {OrientedBoundingBox} from '@math.gl/culling';
 import {Ellipsoid} from '@math.gl/geospatial';
 import {load} from '@loaders.gl/core';
 import {TILE_TYPE, TILE_REFINEMENT, TILESET_TYPE} from '@loaders.gl/tiles';
 import I3SNodePagesTiles from '../../helpers/i3s-nodepages-tiles';
 import {generateTileAttributeUrls, getUrlWithToken} from './url-utils';
-
-const scratchCenter = new Vector3();
 
 export function normalizeTileData(tile, options, context) {
   tile.url = context.url;
@@ -30,10 +28,33 @@ export function normalizeTileData(tile, options, context) {
 }
 
 export function normalizeTileNonUrlData(tile) {
-  scratchCenter.copy(tile.mbs);
-  const centerCartesian = Ellipsoid.WGS84.cartographicToCartesian(tile.mbs.slice(0, 3));
+  const box = tile.obb
+    ? [
+        ...Ellipsoid.WGS84.cartographicToCartesian(tile.obb.center), // cartesian center of box
+        ...tile.obb.halfSize, // halfSize
+        ...tile.obb.quaternion // quaternion
+      ]
+    : undefined;
+  let sphere;
+  if (tile.mbs) {
+    sphere = [
+      ...Ellipsoid.WGS84.cartographicToCartesian(tile.mbs.slice(0, 3)), // cartesian center of sphere
+      tile.mbs[3] // radius of sphere
+    ];
+  } else if (box) {
+    const obb = new OrientedBoundingBox().fromCenterHalfSizeQuaternion(
+      box.slice(0, 3),
+      tile.obb.halfSize,
+      tile.obb.quaternion
+    );
+    const boundingSphere = obb.getBoundingSphere();
+    sphere = [...boundingSphere.center, boundingSphere.radius];
+    tile.mbs = [...tile.obb.center, boundingSphere.radius];
+  }
+
   tile.boundingVolume = {
-    sphere: [...centerCartesian, tile.mbs[3]]
+    sphere,
+    box
   };
   tile.lodMetricType = tile.lodSelection[0].metricType;
   tile.lodMetricValue = tile.lodSelection[0].maxError;

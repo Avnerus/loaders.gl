@@ -19,9 +19,10 @@ const DOUBLE_TYPE = 'Float64';
 const OBJECT_ID_TYPE = 'Oid32';
 /*
 * 'CUSTOM_ATTRIBUTE_2' - Attribute name which includes batch info and used by New York map.
-* _BATCHID - default attribute name which includes batch info.
+* _BATCHID - Default attribute name which includes batch info.
+* BATCHID - Legacy attribute name which includes batch info.
 */
-const BATCHED_ID_POSSIBLE_ATTRIBUTE_NAMES = ['CUSTOM_ATTRIBUTE_2', '_BATCHID'];
+const BATCHED_ID_POSSIBLE_ATTRIBUTE_NAMES = ['CUSTOM_ATTRIBUTE_2', '_BATCHID', 'BATCHID'];
 
 export default async function convertB3dmToI3sGeometry(
   tileContent,
@@ -266,7 +267,6 @@ function convertMesh(
       outputAttributes = attributesMap.get('default');
     }
     assert(outputAttributes !== null, 'Primitive - material mapping failed');
-    normalizeAttributesByIndicesRange(primitive.attributes, primitive.indices);
     const attributes = primitive.attributes;
 
     outputAttributes.positions = concatenateTypedArrays(
@@ -310,29 +310,6 @@ function convertMesh(
   }
 }
 
-/**
- * Do normalisation of arrtibutes based on indices range.
- * @param {Object} indices - gltf primitive indices array
- * @param {Object} attributes - gltf primitive attributes
- * @returns {void}
- */
-function normalizeAttributesByIndicesRange(indices, attributes) {
-  if (!indices || !indices.min || !indices.max) {
-    return;
-  }
-
-  const maxIndex = indices.max[0];
-  const minIndex = indices.min[0];
-
-  for (const key in attributes) {
-    const attribute = attributes[key];
-    attribute.value = attribute.value.subarray(
-      minIndex * attribute.size,
-      maxIndex * attribute.size
-    );
-    attribute.count = maxIndex - minIndex;
-  }
-}
 /**
  * Convert vertices attributes (POSITIONS or NORMALS) to i3s compatible format
  * @param {object} args - source tile (3DTile)

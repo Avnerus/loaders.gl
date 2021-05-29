@@ -27,6 +27,7 @@ import {PGMLoader} from '../pgm-loader';
 import {LAYERS as layersTemplate} from './json-templates/layers';
 import {NODE as nodeTemplate} from './json-templates/node';
 import {SHARED_RESOURCES_TEMPLATE} from './json-templates/shared-resources';
+import {validateNodeBoundingVolumes} from './helpers/node-debug';
 
 const ION_DEFAULT_TOKEN =
   process.env.IonToken || // eslint-disable-line
@@ -56,6 +57,8 @@ export default class I3SConverter {
       tilesCount: 0,
       tilesWithAddRefineCount: 0
     };
+    this.validate = false;
+    this.boundingVolumeWarnings = null;
   }
 
   // Convert a 3d tileset
@@ -68,10 +71,12 @@ export default class I3SConverter {
     sevenZipExe,
     egmFilePath,
     token,
-    draco
+    draco,
+    validate
   }) {
     this.conversionStartTime = process.hrtime();
     this.options = {maxDepth, slpk, sevenZipExe, egmFilePath, draco, token, inputUrl};
+    this.validate = validate;
 
     console.log('Loading egm file...'); // eslint-disable-line
     this.geoidHeightModel = await load(egmFilePath, PGMLoader);
@@ -81,15 +86,12 @@ export default class I3SConverter {
       this.nodePages.useWriteFunction(writeFileForSlpk);
     }
 
-    const options = await this._fetchPreloadOptions();
-    const sourceTilesetJson = await load(inputUrl, CesiumIonLoader, options);
-
-    /* TODO/ib - get rid of confusing options warnings, move into options sub-object */
-    // const tilesetJson = await load(inputUrl, CesiumIonLoader, {
-    //   'cesium-ion': preloadOptions
-    // });
+    const fetchOptions = await this._fetchPreloadOptions();
+    const sourceTilesetJson = await load(inputUrl, CesiumIonLoader, {
+      fetch: fetchOptions
+    });
     // console.log(tilesetJson); // eslint-disable-line
-    this.sourceTileset = new Tileset3D(sourceTilesetJson, options);
+    this.sourceTileset = new Tileset3D(sourceTilesetJson, fetchOptions);
 
     await this._createAndSaveTileset(outputPath, tilesetName);
     await this._finishConversion({slpk, outputPath, tilesetName});
@@ -406,7 +408,10 @@ export default class I3SConverter {
    * @return {Promise<object[]>}
    */
   async _createNode(parentTile, sourceTile, parentId, level) {
-    this._checkAddRefinementTypeForTile(sourceTile);
+    if (this.validate) {
+      this._checkAddRefinementTypeForTile(sourceTile);
+    }
+
     await this._updateTilesetOptions();
     await this.sourceTileset._loadTile(sourceTile);
     const coordinates = convertCommonToI3SCoordinate(sourceTile, this.geoidHeightModel);
@@ -449,6 +454,14 @@ export default class I3SConverter {
 
       if (nodeInPage.mesh) {
         await this._writeResources(resources, node.path);
+      }
+
+      if (this.validate) {
+        this.boundingVolumeWarnings = validateNodeBoundingVolumes(node);
+
+        if (this.boundingVolumeWarnings && this.boundingVolumeWarnings.length) {
+          console.warn('Bounding Volume Warnings: ', ...this.boundingVolumeWarnings); //eslint-disable-line
+        }
       }
 
       nodes.push(node);

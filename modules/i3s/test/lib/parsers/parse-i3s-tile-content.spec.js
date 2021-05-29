@@ -36,7 +36,8 @@ test('ParseI3sTileContent#should load "dds" texture if it is supported', async t
       useDracoGeometry: false
     }
   });
-  const texture = result.content.texture;
+  const texture =
+    result.content.material.pbrMetallicRoughness.baseColorTexture.texture.source.image;
   if (isBrowser) {
     const supportedFormats = getSupportedGPUTextureFormats();
     if (supportedFormats.has('dxt')) {
@@ -84,5 +85,32 @@ test('ParseI3sTileContent#should make PBR material', async t => {
     t.ok(texture.source.image instanceof Object);
     t.ok(texture.source.image.data instanceof Buffer);
   }
+  t.end();
+});
+
+test('ParseI3sTileContent#should have segmentationData', async t => {
+  const i3sTilesetData = TILESET_STUB();
+  const i3SNodePagesTiles = new I3SNodePagesTiles(i3sTilesetData, {});
+  const tile = await i3SNodePagesTiles.formTileFromNodePages(1);
+  const response = await fetchFile(I3S_TILE_CONTENT);
+  const data = await response.arrayBuffer();
+  const result = await parseI3STileContent(data, tile, i3sTilesetData, {
+    i3s: {
+      useDracoGeometry: false
+    }
+  });
+  t.ok(result);
+  t.ok(result.content.segmentationData);
+  t.equal(result.content.segmentationData.length, 25638);
+  t.end();
+});
+
+test('ParseI3sTileContent#should generate mbs from obb', async t => {
+  const i3sTilesetData = TILESET_STUB();
+  const i3SNodePagesTiles = new I3SNodePagesTiles(i3sTilesetData, {});
+  const tile = await i3SNodePagesTiles.formTileFromNodePages(1);
+  t.ok(tile.mbs);
+  t.equals(tile.mbs.length, 4);
+  t.deepEquals(tile.mbs.slice(0, 3), tile.obb.center);
   t.end();
 });

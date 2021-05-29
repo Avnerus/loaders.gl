@@ -1,5 +1,186 @@
 ## v3.0 Prerelease
 
+#### v3.0.0-alpha.18
+
+- i3s-debug: added selector for changing bounding volumes geometry (#1387)
+- tiles: update isLoaded logic (#1398)
+- I3S-Debug - Disable normals Validation controls if there are no normals in Tile (#1394)
+
+#### v3.0.0-alpha.17
+
+- B3dm - Support legacy b3dm data format (#1382)
+- Tile-converter - Fix attributes loading for legacy b3dm (#1389)
+
+#### v3.0.0-alpha.16
+
+- chore(mvt): Use earcut from math.gl (#1391)
+- i3s: optimization (#1396)
+- build(deps): bump browserslist from 4.16.3 to 4.16.6 (#1397)
+
+#### v3.0.0-alpha.15
+
+- tiles: loadTiles option (#1376)
+- I3S-Converter - Add validation flag (#1379)
+- Converter - Fix file for file path (#1378)
+- i3s debug app - renamed warnings in TileValidator (#1374)
+- tiles: update documentation (#1383)
+- i3s-debug: fix multiple viewports (#1385)
+- i3s: fix tests (#1386)
+- gis: Fix inefficient test (#1395)
+- Chore(Arrow): Upgrade apache-arrow to 4.0.0 (#1390)
+
+#### v3.0.0-alpha.14
+
+- I3S-Debug - Rename ObbLayer -> BoundingVolumeLayer (#1363)
+- Add ES5 bundle + fix webpack configuration (#1352)
+- Chore(CSV): fix skipEmptyLines handling for streaming parsing (#1364)
+- I3S-Debug - Add JSDoc for color-map.js file (#1366)
+- I3S-Debug - Refactoring for tiles color (#1357)
+- feat(tiles): OBB transformation (#1370)
+- I3S-Converter - Cleanup top level warnings (#1365)
+- Add dist.es5.min.js description to readme file (#1369)
+- i3s: fix get color function (#1371)
+- tiles: fix zoom evaluation for OBB (#1373)
+- I3S-Debug - Fix for i3s-content-loader worker (#1375)
+
+#### v3.0.0-alpha.13
+
+- Chore(CSV): improve rowFormat handling and consistency (#1360)
+- i3s-debug: remove yarn.lock (#1359)
+- I3S-Debug - Remove normals from minimap view (#1361)
+- MVT triangulation (#1356)
+- Website - Remove Basis + Compressed texture loader from loaders list (#1353)
+- i3s-debug: texture refactoring (#1350)
+- FIX(CSVLoader): Handle duplicate header column names in CSVs (#1355)
+- I3S-Picking - Use u_pickSegmentation uniform (#1354)
+- Add segmentationData to tiles documentation (#1351)
+- Create polyfill for Promise.allSettled() method (#1342)
+- Refactoring in I3S loaders (#1347)
+- i3s-debug: fix debug texture (#1348)
+- i3s-debug: show-debug-texture-image (#1346)
+- examples: fix yarn start-local-deck (#1345)
+- I3S-Debug - Rename custom color option (#1344)
+- I3S-Debug - Move Wireframe mode to tile options (#1343)
+- i3s-debug: improve uv debug texture (#1338)
+- I3S-Debug - Fix for tile validation (#1340)
+- I3S-Debug and I3S-Picking - Fix for attributes panel (#1339)
+- I3S-attribute-loader - Fix for attributes loading (#1337)
+- I3S-Debug - Show normals in percentage way (#1336)
+- I3S-Debug - Normals refactoring (#1335)
+- build(deps): bump ssri from 6.0.1 to 6.0.2 (#1331)
+- I3S-Debug - Add input for changing debug normals length (#1333)
+- fix babel-runtime version (#1334)
+- i3s-debug: uv debug refactoring (#1332)
+
+#### v3.0.0-alpha.12
+
+- I3S-Debug - Compare geometry volume vs Tile volume (#1310)
+- I3S-Debug - Add normals debug feature (#1321)
+- I3S-Debug - Tile debug refactoring (#1323)
+- I3S-Debug - Add wireframe mode (#1327)
+- i3s-debug: texture checker (#1330)
+- I3S-Debug - Refactor attributes panel (#1328)
+- Tile-Converter - Add '--validate-bounding-volumes' option to script (#1329)
+
+#### v3.0.0-alpha.11
+
+- I3s-Debug - Add tile info panel + initial selection logic for custom colors (#1288)
+- i3s-debug: improve layer with obb (#1289)
+- I3s-Debug - Add color picker to custom tile selection mode (#1290)
+- website: add react-color component (#1291)
+- I3SLoader - Add benchmark (#1294)
+- I3S-Debug - Add semantic validator ui (#1295)
+- I3S-Debug - Improve attributes panel in debug mode (#1292)
+- I3S-Debug - Change Semantic Validator UI (#1299)
+- I3S-Debug - Add LOD + OBB Validation (#1300)
+- Modify MVTLoader to output binary without going through geojson (#1281)
+- i3s: support texture atlas (#1282)
+- tile-converter: fix attributes normalization (#1301)
+- tiles: handle multiple viewports v2 (#1296)
+- workflow: don't test nodejs v10 (#1307)
+- i3s debug: stop loading button (#1298)
+- I3S-Debug - Add clear button to semantic validator (#1302)
+- I3S-Debug - Add MBS validation (#1303)
+- I3S-Debug - Add validator for tile geometry (#1305)
+- I3S-Debug - Attributes panel improvemets (#1308)
+- i3s-debug: multiple viewports traversal (#1306)
+- i3s: fix stop loading logic (#1311)
+- i3s-debug: geometry & texture validation (#1309)
+- tile-converter: fixes issue 1313 (#1314)
+- i3s-debug: debug panel refactoring (#1316)
+- tiles: refactor tileset-3d (#1315)
+- i3s debug: fix obb rotation (#1320)
+- i3s-debug: LOD validation (#1312)
+- Tile-converter - Add Node Bounding Volumes Validation (#1319)
+- i3s debug: multiple viewports refactoring (#1317)
+
+#### v3.0.0-alpha.10
+
+- i3s: switch content worker on (#1287)
+- I3S-Picking - Load attributes only on click event (#1286)
+- i3s-debug: obb layers (#1279)
+
+#### v3.0.0-alpha.9
+
+- i3s example: refactoring (#1264)
+- Fix test for get frame state (#1263)
+- I3S-Picking - small naming refactoring (#1260)
+- i3s debug: use main viewport for frustum culling (#1266)
+- I3S - Tile coloring in debug application (#1268)
+- I3S - Tileset debugging (#1265)
+- i3s-debug: options panel (#1269)
+- i3s-debug: app refactoring (#1275)
+- I3S - picking add url token support (#1277)
+- i3s: fix coloring in 1.6 (#1276)
+- I3S-debug - move memory usage to debug panel (#1278)
+- build(deps): bump xmldom from 0.4.0 to 0.5.0 (#1270)
+- i3s: content worker (#1285)
+- I3S Converter - Fix params order in normalizeAttributesByIndicesRange function (#1284)
+- I3S Parse content - check attributes before flatten process (#1283)
+
+#### v3.0.0-alpha.8
+
+- i3s: fix compressed texture issue (#1256)
+- build(deps): bump elliptic from 6.5.3 to 6.5.4 (#1254)
+- I3s-picking - add feature ids to feature attributes mapping (#1257)
+- chore: code cleanup (#1261)
+- fix(compression): zlib compression writes in gzip format by default (#1262)
+
+#### v3.0.0-alpha.7
+
+- chore: typescript 4.2.2 (#1220)
+- chore: Improve coverage further (#1212)
+- examples: fix i3s "yarn start" (#1192)
+- i3s: material support (#1217)
+- i3s: support compressed textures in material (#1224)
+- I3s picking refactoring (#1215)
+- Add i3s 1.6 picking support (#1228)
+- I3s 1.6 picking support small fixes (#1229)
+- texture: load worker from "beta" (#1223)
+- Change I3S example to I3S with picking feature (#1230)
+- GLTF with raw webgl (#1225)
+- I3s Picking improve tooltip view (#1231)
+- I3s Picking improve attributes panel (#1233)
+- I3S picking - Select building using only onclick event (#1234)
+- I3S picking - flatten feature ids by feature indices for compressed geometry (#1236)
+- Update eslintignore and prettierignore (#1244)
+- fix MVT empty binary tiles (#1235)
+- textures example: fixes basis (#1239)
+- I3S-picking - change attribute parsing logic (#1240)
+- I3s-picking - fix feature-index parsing in compressed geometry (#1241)
+- I3s-picking - fix tileset attribute urls generation (#1242)
+- Small fix in camera position for loading 3dtiles (#1247)
+- I3S-picking - refactor getting attributes from selected feature (#1243)
+- I3S-picking fix for integrated mesh layers (#1227)
+- docs: Add vis.gl, Linux Foundation and UCF links (#1252)
+- i3s: fix material lighting (#1237)
+- i3s: debug application (#1249)
+- i3s-debug: publish on site (#1253)
+- I3S-picking - fix for custom example in control panel (#1250)
+- Fixes for warnings regarding unresolved options (#1232)
+- I3S-picking - auto add 'layers/0' if needed to tileset url (#1251)
+- i3s: fix vertex colors (#1255)
+
 #### v3.0.0-alpha.6
 
 - chore: Adjust default worker concurrency. Add mobile concurrency (#1213)

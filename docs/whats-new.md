@@ -27,6 +27,11 @@ Target Release Date: Q1 2021. (Alpha releases are available).
 
 - New `processOnWorker()` function allows applications to run certain non-loader tasks (such as compression and decompression) on workers.
 
+**@loaders.gl/csv**
+
+- The `rowFormat` option can be explicitly set to either `'object'`, which transforms rows to JS objects with the header row as keys (default), or `'array'` in which the row will be returned as an array of values.
+- Datasets with duplicate column names will have columns renamed with a counter suffix.
+
 **@loaders.gl/compression**
 
 - The new `ZlibWorker`, `LZ4Worker` and `ZstdWorker` exports enable compression and decompression of data to be done on worker threads using the new `processOnWorker()` function.
@@ -42,6 +47,21 @@ Target Release Date: Q1 2021. (Alpha releases are available).
 **@loaders.gl/excel** (NEW)
 
 - New table category loader for Excel spreadsheets in both binary `.xls`, `.xlsb` and XML-based `.xlsx` formats.
+
+**@loaders.gl/mvt**
+
+- Binary output is now 2-3X faster for large datasets thanks to parsing directly from PBF to binary, rather than going through GeoJSON as an intermediate representation. Speed comparison on some example data sets (MVT tiles parsed per second):
+
+|                    | Via GeoJSON | Direct | Speed increase |
+| ------------------ | ----------- | ------ | -------------- |
+| Block groups       | 2.86/s      | 5.57/s | 1.94X          |
+| Census layer       | 6.09/s      | 11.9/s | 1.95X          |
+| Counties Layer     | 72.5/s      | 141/s  | 1.94X          |
+| Usa Zip Code Layer | 8.45/s      | 20.3/s | 2.4X           |
+
+_Benchmarks ran using scripts on a 2012 MacBook Pro, 2.3 GHz Intel Core i7, 8 GB, measuring parsing time of MVTLoader only (network time and rendering is not included)_
+
+- When using the MVTLoader with `binary: true` the triangulation of polygons is performed in a worker, speeding up loading of polygon geometries and easing the work on the main thread.
 
 **@loaders.gl/textures** (NEW)
 
@@ -62,6 +82,10 @@ Target Release Date: Q1 2021. (Alpha releases are available).
 **@loaders.gl/kml**
 
 - New loaders: `GPXLoader` and `TCXLoader` to parse common formats for recorded GPS tracks.
+
+**@loaders.gl/arrow**
+
+- Upgraded `apache-arrow` version to 4.0.0
 
 ## v2.3
 
