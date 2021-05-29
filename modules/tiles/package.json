@@ -1,6 +1,6 @@
 {
-  "name": "@softrobot/loaders.gl-tiles",
-  "version": "3.0.0-alpha.17",
+  "name": "@loaders.gl/tiles",
+  "version": "3.0.0-alpha.6",
   "description": "Common components for different tiles loaders.",
   "license": "MIT",
   "publishConfig": {
