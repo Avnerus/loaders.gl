@@ -178,7 +178,7 @@ export default class TileHeader {
     const maySkipTile = this.refine === TILE_REFINEMENT.ADD || skipLevelOfDetail;
 
     // Check if any reason to abort
-    if (maySkipTile && !this.isVisible) {
+    if (maySkipTile && !this.isVisible && this._visible !== null) {
       return -1;
     }
     if (this.contentState === TILE_CONTENT_STATE.UNLOADED) {
@@ -479,7 +479,7 @@ export default class TileHeader {
     this._centerZDepth = 0;
     this._screenSpaceError = 0;
     this._visibilityPlaneMask = CullingVolume.MASK_INDETERMINATE;
-    this._visible = false;
+    this._visible = null;
     this._inRequestVolume = false;
 
     this._stackLength = 0;

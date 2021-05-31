@@ -7,7 +7,9 @@
 const webpack = require('webpack');
 const resolve = require('path').resolve;
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-const ALIASES = require('ocular-dev-tools/config/ocular.config')({
+const {getOcularConfig} = require('ocular-dev-tools');
+
+const ALIASES = getOcularConfig({
   root: resolve(__dirname, '..')
 }).aliases;
 
