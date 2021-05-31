@@ -171,40 +171,31 @@ export default class TileHeader {
   }
 
   // If skipLevelOfDetail is off try to load child tiles as soon as possible so that their parent can refine sooner.
-  // Additive tiles are prioritized by distance because it subjectively looks better.
-  // Replacement tiles are prioritized by screen space error.
-  // A tileset that has both additive and replacement tiles may not prioritize tiles as effectively since SSE and distance
-  // are different types of values. Maybe all priorities need to be normalized to 0-1 range.
+  // Tiles are prioritized by screen space error.
   _getPriority() {
     const traverser = this.tileset._traverser;
-    const {skipLevelOfDetail, startSkippingFromDepth} = traverser.options;
-    const skipTile = skipLevelOfDetail && this._selectionDepth >= startSkippingFromDepth;
+    const {skipLevelOfDetail} = traverser.options;
+    const maySkipTile = this.refine === TILE_REFINEMENT.ADD || skipLevelOfDetail;
 
     // Check if any reason to abort
-    if (!this.isVisible && skipTile) {
+    if (maySkipTile && !this.isVisible) {
       return -1;
     }
     if (this.contentState === TILE_CONTENT_STATE.UNLOADED) {
       return -1;
     }
 
-    switch (this.refine) {
-      case TILE_REFINEMENT.ADD:
-        return this._distanceToCamera;
+    const parent = this.parent;
+    const useParentScreenSpaceError =
+      parent && (!maySkipTile || this._screenSpaceError === 0.0 || parent.hasTilesetContent);
+    const screenSpaceError = useParentScreenSpaceError
+      ? parent._screenSpaceError
+      : this._screenSpaceError;
 
-      case TILE_REFINEMENT.REPLACE:
-        const parent = this.parent;
-        const useParentScreenSpaceError =
-          parent && (!skipTile || this._screenSpaceError === 0.0 || parent.hasTilesetContent);
-        const screenSpaceError = useParentScreenSpaceError
-          ? parent._screenSpaceError
-          : this._screenSpaceError;
+    const rootScreenSpaceError = traverser.root._screenSpaceError;
 
-        const rootScreenSpaceError = traverser.root._screenSpaceError;
-        return Math.max(rootScreenSpaceError - screenSpaceError, 0); // Map higher SSE to lower values (e.g. root tile is highest priority)
-      default:
-        return assert(false);
-    }
+    // Map higher SSE to lower values (e.g. root tile is highest priority)
+    return Math.max(rootScreenSpaceError - screenSpaceError, 0);
   }
 
   // Requests the tile's content.

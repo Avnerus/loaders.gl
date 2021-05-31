@@ -84,8 +84,11 @@ const DEFAULT_OPTIONS = {
   // A 4x4 transformation matrix this transforms the entire tileset.
   modelMatrix: new Matrix4(),
 
-  // Set to true to enable experimental request throttling, for improved performance
-  throttleRequests: false,
+  // Set to false to disable network request throttling
+  throttleRequests: true,
+
+  // Number of simultaneous requsts, if throttleRequests is true
+  maxRequests: 64,
 
   maximumMemoryUsage: 32,
 
@@ -151,7 +154,8 @@ export default class Tileset3D {
     this._traverser = this._initializeTraverser();
     this._cache = new TilesetCache();
     this._requestScheduler = new RequestScheduler({
-      throttleRequests: this.options.throttleRequests
+      throttleRequests: this.options.throttleRequests,
+      maxRequests: this.options.maxRequests
     });
     // update tracker
     // increase in each update cycle
