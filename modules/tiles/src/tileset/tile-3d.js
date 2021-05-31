@@ -192,7 +192,7 @@ export default class TileHeader {
       ? parent._screenSpaceError
       : this._screenSpaceError;
 
-    const rootScreenSpaceError = traverser.root._screenSpaceError;
+    const rootScreenSpaceError = traverser._root ? traverser.root._screenSpaceError : 0.0;
 
     // Map higher SSE to lower values (e.g. root tile is highest priority)
     return Math.max(rootScreenSpaceError - screenSpaceError, 0);
