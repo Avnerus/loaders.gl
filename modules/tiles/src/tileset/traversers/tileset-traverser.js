@@ -297,7 +297,6 @@ export default class TilesetTraverser {
     return anyVisible;
   }
 
-  // TODO revisit this empty traversal logic
   // Depth-first traversal that checks if all nearest descendants with content are loaded.
   // Ignores visibility.
   executeEmptyTraversal(root, frameState) {
@@ -316,8 +315,6 @@ export default class TilesetTraverser {
         this.loadTile(tile, frameState);
       }
 
-      // Touch all tiles in empty traversal
-      // TODO: Can be optimized to visible only?
       this.touchTile(tile, frameState);
 
       // Only traverse if the tile is empty - traversal stop at descendants with content
