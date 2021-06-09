@@ -8,11 +8,7 @@ const webpack = require('webpack');
 const resolve = require('path').resolve;
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const {getOcularConfig} = require('ocular-dev-tools');
-
-const ALIASES = getOcularConfig({
-  root: resolve(__dirname, '..')
-}).aliases;
-
+const ALIASES = getOcularConfig({root: resolve(__dirname, '..')}).aliases;
 const ROOT_DIR = resolve(__dirname, '..');
 const LERNA_INFO = require(resolve(ROOT_DIR, 'lerna.json'));
 
@@ -181,11 +177,11 @@ function addESNextSettings(config) {
   // Look for babel plugin
   config.module = config.module || {};
   config.module.rules = config.module.rules || [];
-  const babelRule = config.module.rules.find(rule => rule.loader === 'babel-loader');
+  const babelRule = config.module.rules.find((rule) => rule.loader === 'babel-loader');
 
   // If found, inject excludes in @babel/present-env to prevent transpile
   if (babelRule && babelRule.options && babelRule.options.presets) {
-    babelRule.options.presets = babelRule.options.presets.map(preset => {
+    babelRule.options.presets = babelRule.options.presets.map((preset) => {
       if (preset === '@babel/preset-env') {
         return [
           '@babel/preset-env',
@@ -200,40 +196,42 @@ function addESNextSettings(config) {
   return config;
 }
 
-module.exports = (baseConfig, opts = {}) => env => {
-  let config = baseConfig;
+module.exports =
+  (baseConfig, opts = {}) =>
+  (env) => {
+    let config = baseConfig;
 
-  /* eslint-disable no-console */
-  if (env && env.help) {
-    console.log(
-      '--env.esnext: Use non-transpiled vis.gl dependencies and disable regenerator transforms'
-    );
-    console.log('--env.local: Build against local src for modules in this repo');
-    console.log('--env.math,luma,deck: Build against local src for external repos');
-    console.log('--env.analyze: Add bundle size analyzer plugin');
-  }
+    /* eslint-disable no-console */
+    if (env && env.help) {
+      console.log(
+        '--env.esnext: Use non-transpiled vis.gl dependencies and disable regenerator transforms'
+      );
+      console.log('--env.local: Build against local src for modules in this repo');
+      console.log('--env.math,luma,deck: Build against local src for external repos');
+      console.log('--env.analyze: Add bundle size analyzer plugin');
+    }
 
-  console.log('For documentation on build options, run: "yarn start --env.help"');
+    console.log('For documentation on build options, run: "yarn start --env.help"');
 
-  /* eslint-enable no-console */
-  if (env && env.esnext) {
-    config = addESNextSettings(config);
-  }
+    /* eslint-enable no-console */
+    if (env && env.esnext) {
+      config = addESNextSettings(config);
+    }
 
-  if (env && env.local) {
-    config = addLocalDevSettings(config, opts);
-  }
+    if (env && env.local) {
+      config = addLocalDevSettings(config, opts);
+    }
 
-  // Iterate over env keys and see if they match a local dependency
-  for (const key in env || {}) {
-    config = addLocalDependency(config, key);
-  }
+    // Iterate over env keys and see if they match a local dependency
+    for (const key in env || {}) {
+      config = addLocalDependency(config, key);
+    }
 
-  if (env && env.analyze) {
-    config = addAnalyzerSettings(config);
-  }
+    if (env && env.analyze) {
+      config = addAnalyzerSettings(config);
+    }
 
-  // uncomment to debug
-  // console.warn(JSON.stringify(config, null, 2));
-  return config;
-};
+    // uncomment to debug
+    // console.warn(JSON.stringify(config, null, 2));
+    return config;
+  };

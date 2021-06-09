@@ -1,5 +1,6 @@
 import ManagedArray from '../../utils/managed-array';
 import {TILE_REFINEMENT} from '../../constants';
+import {assert} from '@loaders.gl/loader-utils';
 
 export const DEFAULT_OPTIONS = {
   loadSiblings: false,
@@ -71,6 +72,7 @@ export default class TilesetTraverser {
     root._selectionDepth = depth;
     stack.push(root);
 
+    stack.push(root);
     while (stack.length > 0) {
       // 1. pop tile
       const tile = stack.pop();
@@ -227,6 +229,10 @@ export default class TilesetTraverser {
   // tile should have children
   // tile LoD (level of detail) is not sufficient under current viewport
   canTraverse(tile, frameState, useParentMetric = false, ignoreVisibility = false) {
+    if (!ignoreVisibility && !tile.isVisibleAndInRequestVolume) {
+      return false;
+    }
+
     if (!tile.hasChildren) {
       return false;
     }
@@ -288,6 +294,36 @@ export default class TilesetTraverser {
     return b._distanceToCamera - a._distanceToCamera;
   }
 
+  // If skipLevelOfDetail is off try to load child tiles as soon as possible so that their parent can refine sooner.
+  // Additive tiles are prioritized by distance because it subjectively looks better.
+  // Replacement tiles are prioritized by screen space error.
+  // A tileset that has both additive and replacement tiles may not prioritize tiles as effectively since SSE and distance
+  // are different types of values. Maybe all priorities need to be normalized to 0-1 range.
+  // TODO move to tile-3d-header
+  getPriority(tile) {
+    const {options} = this;
+    switch (tile.refine) {
+      case TILE_REFINEMENT.ADD:
+        return tile._distanceToCamera;
+
+      case TILE_REFINEMENT.REPLACE:
+        const {parent} = tile;
+        const useParentScreenSpaceError =
+          parent &&
+          (!options.skipLevelOfDetail ||
+            tile._screenSpaceError === 0.0 ||
+            parent.hasTilesetContent);
+        const screenSpaceError = useParentScreenSpaceError
+          ? parent._screenSpaceError
+          : tile._screenSpaceError;
+        const rootScreenSpaceError = this.root._screenSpaceError;
+        return rootScreenSpaceError - screenSpaceError; // Map higher SSE to lower values (e.g. root tile is highest priority)
+
+      default:
+        return assert(false);
+    }
+  }
+
   anyChildrenVisible(tile, frameState) {
     let anyVisible = false;
     for (const child of tile.children) {
@@ -314,6 +350,7 @@ export default class TilesetTraverser {
       if (!tile.isVisibleAndInRequestVolume) {
         // Load tiles that aren't visible since they are still needed for the parent to refine
         this.loadTile(tile, frameState);
+        this.touchTile(tile, frameState);
       }
 
       // Touch all tiles in empty traversal
@@ -322,6 +359,12 @@ export default class TilesetTraverser {
 
       // Only traverse if the tile is empty - traversal stop at descendants with content
       const traverse = !tile.hasRenderContent && this.canTraverse(tile, frameState, false, true);
+
+      // Traversal stops but the tile does not have content yet.
+      // There will be holes if the parent tries to refine to its children, so don't refine.
+      if (!traverse && !tile.contentAvailable) {
+        allDescendantsLoaded = false;
+      }
 
       if (traverse) {
         const children = tile.children;

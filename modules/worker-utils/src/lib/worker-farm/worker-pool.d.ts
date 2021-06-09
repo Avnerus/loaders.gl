@@ -13,7 +13,6 @@ type OnDebugParameters = {
  * Process multiple data messages with small pool of identical workers
  */
 export default class WorkerPool {
-
   readonly maxConcurrency: number;
 
   /**
@@ -26,7 +25,7 @@ export default class WorkerPool {
     name?: string;
     maxConcurrency?: number;
     onDebug?: (options: OnDebugParameters) => any;
-    reuseWorkers?: boolean
+    reuseWorkers?: boolean;
   });
 
   /**

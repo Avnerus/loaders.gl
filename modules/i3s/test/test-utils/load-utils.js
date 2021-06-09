@@ -1,6 +1,6 @@
 import {I3SLoader} from '@loaders.gl/i3s';
 import {Tileset3D, Tile3D} from '@loaders.gl/tiles';
-import I3SNodePagesTiles from '../../src/helpers/i3s-nodepages-tiles';
+import I3SNodePagesTiles from '../../src/lib/helpers/i3s-nodepages-tiles';
 
 /**
  * The data stub of "tileset header" which I3SLoader returns after loading
@@ -12,8 +12,7 @@ export const TILESET_STUB = () => ({
     nodesPerPage: 64,
     lodSelectionMetricType: 'maxScreenThresholdSQ'
   },
-  url:
-    'https://raw.githubusercontent.com/visgl/loaders.gl/master/modules/i3s/test/data/SanFrancisco_3DObjects_1_7/SceneServer/layers/0',
+  url: 'https://raw.githubusercontent.com/visgl/loaders.gl/master/modules/i3s/test/data/SanFrancisco_3DObjects_1_7/SceneServer/layers/0',
   materialDefinitions: [
     {
       doubleSided: true,

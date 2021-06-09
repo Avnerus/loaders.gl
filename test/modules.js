@@ -2,8 +2,8 @@
 
 /* eslint-disable @typescript-eslint/no-var-requires */
 
-const {_addAliases} = require('@loaders.gl/loader-utils');
 const ALIASES = require('./aliases');
+const {_addAliases} = require('@loaders.gl/loader-utils');
 _addAliases(ALIASES);
 
 const TEST_BASE = true;
@@ -43,6 +43,8 @@ if (TEST_IMAGES) {
   require('@loaders.gl/images/test');
   require('@loaders.gl/textures/test');
   require('@loaders.gl/video/test');
+  require('@loaders.gl/geotiff/test');
+  require('@loaders.gl/zarr/test');
 }
 
 // Pointcloud/Mesh Formats
@@ -70,12 +72,13 @@ if (TEST_TILES) {
 
 // Geospatial Formats
 if (TEST_GEOSPATIAL) {
-  require('@loaders.gl/gis/test')
   require('@loaders.gl/flatgeobuf/test')
+  require('@loaders.gl/geopackage/test')
+  require('@loaders.gl/gis/test')
   require('@loaders.gl/kml/test');
-  require('@loaders.gl/wkt/test');
   require('@loaders.gl/mvt/test');
   require('@loaders.gl/shapefile/test')
+  require('@loaders.gl/wkt/test');
 }
 
 // Table Formats
