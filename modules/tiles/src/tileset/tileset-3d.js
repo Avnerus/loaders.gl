@@ -386,7 +386,6 @@ export default class Tileset3D {
     let tilesRenderable = 0;
     let pointsRenderable = 0;
     for (const tile of this.selectedTiles) {
-      // TODO: Checking also content to avoid race condition with state
       if (tile.contentAvailable && tile.content) {
         tilesRenderable++;
         if (tile.content.pointCount) {
