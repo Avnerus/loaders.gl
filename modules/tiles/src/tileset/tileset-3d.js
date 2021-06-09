@@ -98,6 +98,9 @@ const DEFAULT_OPTIONS = {
   onTileUnload: () => {},
   onTileError: (tile, message, url) => {},
 
+  // Optional async tile content loader
+  contentLoader: null,
+
   // TODO CESIUM
   // The maximum screen space error used to drive level of detail refinement.
   maximumScreenSpaceError: 8
@@ -134,12 +137,18 @@ export default class Tileset3D {
     this.refine = json.root.refine;
 
     // TODO add to loader context?
-    this.fetchOptions = this.options.fetchOptions || {};
+    this.loadOptions = this.options.loadOptions || {};
     if (this.options.headers) {
-      this.fetchOptions.headers = this.options.headers;
+      this.loadOptions.fetch = {
+        ...this.loadOptions.fetch,
+        headers: this.options.headers
+      };
     }
     if (this.options.token) {
-      this.fetchOptions.token = this.options.token;
+      this.loadOptions.fetch = {
+        ...this.loadOptions.fetch,
+        token: this.options.token
+      };
     }
 
     this.root = null;
