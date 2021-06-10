@@ -101,6 +101,9 @@ const DEFAULT_OPTIONS = {
   // Optional async tile content loader
   contentLoader: null,
 
+  // View distance scale modifier
+  viewDistanceScale: 1.0,
+
   // TODO CESIUM
   // The maximum screen space error used to drive level of detail refinement.
   maximumScreenSpaceError: 8
