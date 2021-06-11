@@ -298,7 +298,7 @@ export default class TileHeader {
     const maySkipTile = this.refine === TILE_REFINEMENT.ADD || skipLevelOfDetail;
 
     // Check if any reason to abort
-    if (maySkipTile && !this.isVisible && this._visible !== null) {
+    if (maySkipTile && !this.isVisible && this._visible !== undefined) {
       return -1;
     }
     if (this.contentState === TILE_CONTENT_STATE.UNLOADED) {
