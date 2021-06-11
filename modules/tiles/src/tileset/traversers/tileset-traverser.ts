@@ -1,17 +1,51 @@
 import ManagedArray from '../../utils/managed-array';
 import {TILE_REFINEMENT} from '../../constants';
+import {assert} from '@loaders.gl/loader-utils';
 
-export const DEFAULT_OPTIONS = {
+export type TilesetTraverserProps = {
+  loadSiblings?: boolean;
+  skipLevelOfDetail?: boolean;
+  maximumScreenSpaceError?: number;
+  onTraversalEnd?: (frameState) => any;
+  viewportTraversersMap?: {[key: string]: any};
+  basePath?: string;
+};
+
+export type Props = {
+  loadSiblings: boolean;
+  skipLevelOfDetail: boolean;
+  updateTransforms: boolean;
+  maximumScreenSpaceError: number;
+  onTraversalEnd: (frameState) => any;
+  viewportTraversersMap: {[key: string]: any};
+  basePath: string;
+};
+
+export const DEFAULT_PROPS: Props = {
   loadSiblings: false,
   skipLevelOfDetail: false,
+  maximumScreenSpaceError: 2,
   updateTransforms: true,
-  maximumScreenSpaceError: 2
+  onTraversalEnd: () => {},
+  viewportTraversersMap: {},
+  basePath: ''
 };
 
 export default class TilesetTraverser {
+  options: Props;
+
+  root: any;
+  requestedTiles: object;
+  selectedTiles: object;
+  emptyTiles: object;
+
+  protected _traversalStack: ManagedArray;
+  protected _emptyTraversalStack: ManagedArray;
+  protected _frameNumber: number | null;
+
   // TODO nested props
-  constructor(options) {
-    this.options = {...DEFAULT_OPTIONS, ...options};
+  constructor(options: TilesetTraverserProps) {
+    this.options = {...DEFAULT_PROPS, ...options};
     // TRAVERSAL
     // temporary storage to hold the traversed tiles during a traversal
     this._traversalStack = new ManagedArray();
@@ -124,9 +158,7 @@ export default class TilesetTraverser {
       tile._shouldRefine = shouldRefine && parentRefines;
     }
 
-    if (this.options.onTraversalEnd) {
-      this.options.onTraversalEnd(frameState);
-    }
+    this.options.onTraversalEnd(frameState);
   }
 
   updateChildTiles(tile, frameState) {
@@ -144,7 +176,7 @@ export default class TilesetTraverser {
     const children = tile.children;
 
     // sort children tiles
-    children.sort(this.compareDistanceToCamera);
+    children.sort(this.compareDistanceToCamera.bind(this));
 
     // For traditional replacement refinement only refine if all children are loaded.
     // Empty tiles are exempt since it looks better if children stream in as they are loaded to fill the empty space.
@@ -268,7 +300,7 @@ export default class TilesetTraverser {
   }
 
   updateTileVisibility(tile, frameState) {
-    const viewportIds = [];
+    const viewportIds: string[] = [];
     if (this.options.viewportTraversersMap) {
       for (const key in this.options.viewportTraversersMap) {
         const value = this.options.viewportTraversersMap[key];

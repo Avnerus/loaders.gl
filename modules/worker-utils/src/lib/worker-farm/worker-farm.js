@@ -1,5 +1,4 @@
 /** @typedef {import('./worker-farm').WorkerFarmProps} WorkerFarmProps */
-import {isMobile} from '../env-utils/globals';
 import WorkerPool from './worker-pool';
 import WorkerThread from './worker-thread';
 
@@ -7,8 +6,8 @@ import WorkerThread from './worker-thread';
 const DEFAULT_PROPS = {
   maxConcurrency: 3,
   maxMobileConcurrency: 1,
-  onDebug: () => {},
-  reuseWorkers: true
+  reuseWorkers: true,
+  onDebug: () => {}
 };
 
 let _workerFarm = null;
@@ -25,6 +24,8 @@ export default class WorkerFarm {
   }
 
   constructor(props) {
+    /** @type Map<string, WorkerPool>} */
+    this.workerPools = new Map();
     this.props = {...DEFAULT_PROPS};
     this.setProps(props);
     /** @type Map<string, WorkerPool>} */
@@ -37,29 +38,33 @@ export default class WorkerFarm {
 
   setProps(props) {
     this.props = {...this.props, ...props};
+    // Update worker pool props
+    for (const workerPool of this.workerPools.values()) {
+      workerPool.setProps(this._getWorkerPoolProps());
+    }
   }
 
   getWorkerPool({name, source, url}) {
     let workerPool = this.workerPools.get(name);
 
-    const maxConcurrency = isMobile ? this.props.maxMobileConcurrency : this.props.maxConcurrency;
-
-    if (workerPool && workerPool.maxConcurrency !== maxConcurrency) {
-      workerPool.destroy();
-      workerPool = undefined;
-    }
-
     if (!workerPool) {
       workerPool = new WorkerPool({
         name,
         source,
-        url,
-        maxConcurrency,
-        onDebug: this.props.onDebug,
-        reuseWorkers: this.props.reuseWorkers
+        url
       });
+      workerPool.setProps(this._getWorkerPoolProps());
       this.workerPools.set(name, workerPool);
     }
     return workerPool;
+  }
+
+  _getWorkerPoolProps() {
+    return {
+      maxConcurrency: this.props.maxConcurrency,
+      maxMobileConcurrency: this.props.maxMobileConcurrency,
+      reuseWorkers: this.props.reuseWorkers,
+      onDebug: this.props.onDebug
+    };
   }
 }
