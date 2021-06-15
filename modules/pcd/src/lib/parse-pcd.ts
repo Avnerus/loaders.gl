@@ -9,7 +9,7 @@
 // Limitations: Compressed binary files are not supported.
 
 import {getMeshBoundingBox} from '@loaders.gl/loader-utils';
-import {Field, Float32, Uint8, FixedSizeList, Schema} from '@loaders.gl/tables';
+import {Field, Float32, Uint8, FixedSizeList, Schema} from '@loaders.gl/schema';
 
 const LITTLE_ENDIAN = true;
 
@@ -260,7 +260,7 @@ function parsePCDBinary(PCDheader, data) {
 function getSchemaFromPCDHeader(PCDheader, metadata) {
   const offset = PCDheader.offset;
 
-  const fields: any = [];
+  const fields: Field[] = [];
 
   if (offset.x !== undefined) {
     fields.push(
