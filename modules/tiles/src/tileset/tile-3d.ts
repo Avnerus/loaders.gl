@@ -178,6 +178,7 @@ export default class TileHeader {
     this._shouldRefine = false;
     this._distanceToCamera = 0;
     this._centerZDepth = 0;
+    this._visible = undefined;
     this._inRequestVolume = false;
     this._stackLength = 0;
     this._selectionDepth = 0;
@@ -295,6 +296,13 @@ export default class TileHeader {
   _getPriority() {
     const traverser = this.tileset._traverser;
     const {skipLevelOfDetail} = traverser.options;
+
+    /*
+     * Tiles that are outside of the camera's frustum could be skipped if we are in 'ADD' mode
+     * or if we are using 'Skip Traversal' in 'REPLACE' mode.
+     * In 'REPLACE' and 'Base Traversal' mode, all child tiles have to be loaded and displayed,
+     * including ones outide of the camera frustum, so that we can hide the parent tile.
+     */
     const maySkipTile = this.refine === TILE_REFINEMENT.ADD || skipLevelOfDetail;
 
     // Check if any reason to abort
@@ -305,6 +313,7 @@ export default class TileHeader {
       return -1;
     }
 
+    // Based on the priority function `getPriorityReverseScreenSpaceError` in CesiumJS. Scheduling priority is based on the parent's screen space error when possible.
     const parent = this.parent;
     const useParentScreenSpaceError =
       parent && (!maySkipTile || this._screenSpaceError === 0.0 || parent.hasTilesetContent);
